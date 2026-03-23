@@ -1,11 +1,74 @@
 import { useState } from 'react';
 import {
   CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
-  Building2, Wrench, CreditCard, Search, Send,
+  Building2, Wrench, CreditCard, Search, Send, Edit,
 } from 'lucide-react';
 import { useAllDeals, useApproveDeal, useRejectDeal, useSetDealUnderReview } from '../../hooks/useDeals';
+import { useAllAmendments, useReviewAmendment } from '../../hooks/useAmendments';
 import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
+
+const AMENDMENT_TYPE_LABELS = {
+  term_extension:  'Term extension',
+  payment_holiday: 'Payment holiday',
+  settlement:      'Early settlement',
+  rate_change:     'Rate change',
+  other:           'Other variation',
+};
+
+function AmendmentCard({ amend }) {
+  const { showToast } = useAppContext();
+  const review = useReviewAmendment();
+  const [notes, setNotes] = useState('');
+  const isPending = amend.status === 'pending' || amend.status === 'under_review';
+
+  const handle = async (status) => {
+    try {
+      await review.mutateAsync({ amendmentId: amend.id, status, adminNotes: notes });
+      showToast(status === 'approved' ? 'Amendment approved' : 'Amendment declined', status === 'approved' ? 'success' : 'info');
+    } catch (err) { showToast(err.message, 'error'); }
+  };
+
+  const sm = { pending: { color: 'var(--blue)' }, under_review: { color: 'var(--amber)' }, approved: { color: 'var(--green)' }, rejected: { color: 'var(--red)' } };
+  const color = sm[amend.status]?.color || 'var(--tx3)';
+
+  return (
+    <div className="card" style={{ marginBottom: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: 13 }}>{AMENDMENT_TYPE_LABELS[amend.amendment_type] || amend.amendment_type}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
+            {amend.deal?.reference_number} · {amend.deal?.customer_name}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--tx4)', marginTop: 1 }}>
+            Requested by {amend.requester?.company_name || amend.requester?.full_name} · {new Date(amend.created_at).toLocaleDateString('en-GB')}
+          </div>
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 600, color, padding: '3px 10px', borderRadius: 99, background: color + '18' }}>
+          {amend.status.replace('_', ' ')}
+        </span>
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 12 }}>{amend.description}</div>
+      {isPending && (
+        <div style={{ borderTop: '1px solid var(--bdr)', paddingTop: 12 }}>
+          <textarea className="form-input" rows={2} style={{ fontSize: 12, resize: 'vertical', marginBottom: 10 }}
+            placeholder="Decision notes (optional)…" value={notes} onChange={e => setNotes(e.target.value)} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary" style={{ fontSize: 11 }} onClick={() => handle('approved')} disabled={review.isPending}>
+              <CheckCircle size={12} /> Approve
+            </button>
+            <button className="btn btn-ghost" style={{ fontSize: 11, color: 'var(--red)', border: '1px solid var(--red-m)' }} onClick={() => handle('rejected')} disabled={review.isPending}>
+              <XCircle size={12} /> Decline
+            </button>
+          </div>
+        </div>
+      )}
+      {!isPending && amend.admin_notes && (
+        <div style={{ fontSize: 11, color: 'var(--tx3)', borderTop: '1px solid var(--bdr)', paddingTop: 10 }}>Notes: {amend.admin_notes}</div>
+      )}
+    </div>
+  );
+}
 
 const STATUS_META = {
   submitted:    { label: 'Submitted',  color: 'var(--blue)',  bg: 'var(--blue-l)' },
@@ -29,6 +92,7 @@ function DealCard({ deal }) {
   const [expanded, setExpanded] = useState(false);
   const [notes, setNotes] = useState(deal.admin_notes || '');
   const [startDate, setStartDate] = useState('');
+  const [customerEmail, setCustomerEmail] = useState(deal.customer_email || '');
   const approve = useApproveDeal();
   const reject = useRejectDeal();
   const setUnderReview = useSetDealUnderReview();
@@ -40,8 +104,13 @@ function DealCard({ deal }) {
 
   const handleApprove = async () => {
     try {
-      await approve.mutateAsync({ dealId: deal.id, adminNotes: notes, startDate });
-      showToast('Deal approved — contract created', 'success');
+      await approve.mutateAsync({ dealId: deal.id, adminNotes: notes, startDate, customerEmail });
+      showToast(
+        customerEmail
+          ? 'Deal approved — contract created & customer invited'
+          : 'Deal approved — contract created',
+        'success'
+      );
     } catch (err) { showToast(err.message, 'error'); }
   };
 
@@ -170,17 +239,35 @@ function DealCard({ deal }) {
                 />
               </div>
 
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 11, color: 'var(--tx3)', display: 'block', marginBottom: 4 }}>
-                  Contract start date (leave blank to default to today)
-                </label>
-                <input
-                  type="date"
-                  className="form-input"
-                  style={{ width: 180, fontSize: 12 }}
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px', marginBottom: 16 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--tx3)', display: 'block', marginBottom: 4 }}>
+                    Contract start date (leave blank to use today)
+                  </label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    style={{ fontSize: 12 }}
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--tx3)', display: 'block', marginBottom: 4 }}>
+                    Customer portal invite email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    style={{ fontSize: 12 }}
+                    placeholder={deal.customer_email || 'customer@example.com'}
+                    value={customerEmail}
+                    onChange={e => setCustomerEmail(e.target.value)}
+                  />
+                  <div style={{ fontSize: 10, color: 'var(--tx4)', marginTop: 3 }}>
+                    Sends a portal invite email on approval
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 10 }}>
@@ -220,9 +307,12 @@ function DealCard({ deal }) {
 }
 
 export default function AdminDealQueue() {
+  const [tab, setTab] = useState('deals');
   const [filter, setFilter] = useState('submitted');
   const [search, setSearch] = useState('');
+  const [amendFilter, setAmendFilter] = useState('pending');
   const { data: deals = [], isLoading, error } = useAllDeals();
+  const { data: amendments = [], isLoading: amendLoading } = useAllAmendments();
 
   const filtered = deals
     .filter(d => filter === 'all' || d.status === filter)
@@ -238,6 +328,9 @@ export default function AdminDealQueue() {
     ['submitted', 'under_review', 'approved', 'rejected'].map(s => [s, deals.filter(d => d.status === s).length])
   );
 
+  const pendingAmendments = amendments.filter(a => a.status === 'pending' || a.status === 'under_review');
+  const filteredAmendments = amendFilter === 'all' ? amendments : amendments.filter(a => a.status === amendFilter);
+
   return (
     <div className="page">
       <div className="page-header">
@@ -245,58 +338,125 @@ export default function AdminDealQueue() {
           <div className="page-title">Deal review queue</div>
           <div className="page-sub">
             {counts.submitted + counts.under_review} deal{counts.submitted + counts.under_review !== 1 ? 's' : ''} awaiting decision
+            {pendingAmendments.length > 0 && ` · ${pendingAmendments.length} amendment${pendingAmendments.length !== 1 ? 's' : ''} pending`}
           </div>
         </div>
       </div>
 
-      {/* Status summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--bdr)', paddingBottom: 0 }}>
         {[
-          { key: 'submitted',    label: 'New',       color: 'var(--blue)' },
-          { key: 'under_review', label: 'In review', color: 'var(--amber)' },
-          { key: 'approved',     label: 'Approved',  color: 'var(--green)' },
-          { key: 'rejected',     label: 'Declined',  color: 'var(--red)' },
-        ].map(({ key, label, color }) => (
-          <div
-            key={key}
-            className="metric-card"
-            style={{ cursor: 'pointer', outline: filter === key ? `2px solid ${color}` : undefined }}
-            onClick={() => setFilter(filter === key ? 'all' : key)}
+          { key: 'deals',      label: 'Deal decisions', count: counts.submitted + counts.under_review },
+          { key: 'amendments', label: 'Amendment requests', count: pendingAmendments.length },
+        ].map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            style={{
+              padding: '8px 16px',
+              fontSize: 13,
+              fontWeight: tab === t.key ? 700 : 500,
+              color: tab === t.key ? 'var(--coral)' : 'var(--tx3)',
+              background: 'none',
+              border: 'none',
+              borderBottom: tab === t.key ? '2px solid var(--coral)' : '2px solid transparent',
+              cursor: 'pointer',
+              marginBottom: -2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
           >
-            <div className="metric-value" style={{ color }}>{counts[key] || 0}</div>
-            <div className="metric-label">{label}</div>
-          </div>
+            {t.label}
+            {t.count > 0 && (
+              <span style={{ background: t.key === 'deals' ? 'var(--blue-l)' : 'var(--amber-l)', color: t.key === 'deals' ? 'var(--blue)' : 'var(--amber)', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '1px 7px' }}>
+                {t.count}
+              </span>
+            )}
+          </button>
         ))}
       </div>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div className="form-input" style={{ display: 'flex', alignItems: 'center', gap: 8, width: 260, height: 34, padding: '0 10px' }}>
-          <Search size={13} style={{ color: 'var(--tx4)', flexShrink: 0 }} />
-          <input style={{ all: 'unset', flex: 1, fontSize: 12 }} placeholder="Search customer, ref, or originator…" value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {['all', 'submitted', 'under_review', 'approved', 'rejected'].map(s => (
-            <button key={s} className={`btn ${filter === s ? 'btn-primary' : 'btn-ghost'}`} style={{ fontSize: 11, padding: '4px 12px', height: 32 }} onClick={() => setFilter(s)}>
-              {s === 'all' ? 'All' : STATUS_META[s]?.label || s}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {isLoading && <div className="page-loading"><LoadingSpinner size={24} /></div>}
-      {error && <div className="page-error">{error.message}</div>}
-
-      {!isLoading && filtered.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <div style={{ color: 'var(--tx4)', marginBottom: 14 }}><Send size={40} /></div>
-            <div className="empty-state-title">No deals here</div>
-            <div className="empty-state-sub">Submitted deals from originators will appear here for credit review.</div>
+      {/* ── Deals tab ── */}
+      {tab === 'deals' && (
+        <>
+          {/* Status summary */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+            {[
+              { key: 'submitted',    label: 'New',       color: 'var(--blue)' },
+              { key: 'under_review', label: 'In review', color: 'var(--amber)' },
+              { key: 'approved',     label: 'Approved',  color: 'var(--green)' },
+              { key: 'rejected',     label: 'Declined',  color: 'var(--red)' },
+            ].map(({ key, label, color }) => (
+              <div
+                key={key}
+                className="metric-card"
+                style={{ cursor: 'pointer', outline: filter === key ? `2px solid ${color}` : undefined }}
+                onClick={() => setFilter(filter === key ? 'all' : key)}
+              >
+                <div className="metric-value" style={{ color }}>{counts[key] || 0}</div>
+                <div className="metric-label">{label}</div>
+              </div>
+            ))}
           </div>
-        </div>
-      ) : (
-        filtered.map(d => <DealCard key={d.id} deal={d} />)
+
+          {/* Filters */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="form-input" style={{ display: 'flex', alignItems: 'center', gap: 8, width: 260, height: 34, padding: '0 10px' }}>
+              <Search size={13} style={{ color: 'var(--tx4)', flexShrink: 0 }} />
+              <input style={{ all: 'unset', flex: 1, fontSize: 12 }} placeholder="Search customer, ref, or originator…" value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {['all', 'submitted', 'under_review', 'approved', 'rejected'].map(s => (
+                <button key={s} className={`btn ${filter === s ? 'btn-primary' : 'btn-ghost'}`} style={{ fontSize: 11, padding: '4px 12px', height: 32 }} onClick={() => setFilter(s)}>
+                  {s === 'all' ? 'All' : STATUS_META[s]?.label || s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {isLoading && <div className="page-loading"><LoadingSpinner size={24} /></div>}
+          {error && <div className="page-error">{error.message}</div>}
+
+          {!isLoading && filtered.length === 0 ? (
+            <div className="card">
+              <div className="empty-state">
+                <div style={{ color: 'var(--tx4)', marginBottom: 14 }}><Send size={40} /></div>
+                <div className="empty-state-title">No deals here</div>
+                <div className="empty-state-sub">Submitted deals from originators will appear here for credit review.</div>
+              </div>
+            </div>
+          ) : (
+            filtered.map(d => <DealCard key={d.id} deal={d} />)
+          )}
+        </>
+      )}
+
+      {/* ── Amendments tab ── */}
+      {tab === 'amendments' && (
+        <>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+            {['pending', 'under_review', 'approved', 'rejected', 'all'].map(s => (
+              <button key={s} className={`btn ${amendFilter === s ? 'btn-primary' : 'btn-ghost'}`} style={{ fontSize: 11, padding: '4px 12px', height: 32 }} onClick={() => setAmendFilter(s)}>
+                {s === 'all' ? 'All' : s === 'under_review' ? 'In review' : s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {amendLoading && <div className="page-loading"><LoadingSpinner size={24} /></div>}
+
+          {!amendLoading && filteredAmendments.length === 0 ? (
+            <div className="card">
+              <div className="empty-state">
+                <div style={{ color: 'var(--tx4)', marginBottom: 14 }}><Edit size={40} /></div>
+                <div className="empty-state-title">No amendment requests</div>
+                <div className="empty-state-sub">When originators request deal variations, they appear here.</div>
+              </div>
+            </div>
+          ) : (
+            filteredAmendments.map(a => <AmendmentCard key={a.id} amend={a} />)
+          )}
+        </>
       )}
     </div>
   );

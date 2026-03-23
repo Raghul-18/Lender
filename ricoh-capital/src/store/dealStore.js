@@ -1,14 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+function makeRef() {
+  const y = new Date().getFullYear();
+  const n = Math.floor(Math.random() * 90000 + 10000);
+  return `REF-${y}-${n}`;
+}
+
 export const useDealStore = create(
   persist(
   (set, get) => ({
   // Step 1 data
   initiation: {
     customerName: '',
+    customerEmail: '',
     productType: 'Asset Finance — Hire Purchase',
-    originatorReference: '',
+    originatorReference: makeRef(),
     preferredStartDate: '',
     notes: '',
   },
@@ -55,7 +62,7 @@ export const useDealStore = create(
   },
 
   reset: () => set({
-    initiation: { customerName: '', productType: 'Asset Finance — Hire Purchase', originatorReference: '', preferredStartDate: '', notes: '' },
+    initiation: { customerName: '', customerEmail: '', productType: 'Asset Finance — Hire Purchase', originatorReference: makeRef(), preferredStartDate: '', notes: '' },
     assetDetails: { assetType: 'Commercial vehicle', make: '', model: '', year: new Date().getFullYear(), assetValue: 0, termMonths: 36, deposit: 0, balloon: 0, rateType: 'Fixed' },
     submittedDealId: null,
     submittedRefNumber: null,

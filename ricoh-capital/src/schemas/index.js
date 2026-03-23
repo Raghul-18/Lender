@@ -18,8 +18,9 @@ export const registrationSchema = z.object({
 // ── Deal Initiation ────────────────────────────────────────
 export const dealInitiationSchema = z.object({
   customerName: z.string().min(2, 'Customer name is required'),
+  customerEmail: z.string().email('Must be a valid email').optional().or(z.literal('')),
   productType: z.string().min(1, 'Product type is required'),
-  originatorReference: z.string().min(1, 'Your reference is required'),
+  originatorReference: z.string().optional(),
   preferredStartDate: z.string().optional(),
   notes: z.string().optional(),
 });

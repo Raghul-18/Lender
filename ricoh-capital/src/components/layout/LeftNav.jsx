@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Plus, FileText, Users, Bell,
   ClipboardList, FolderOpen, ShieldCheck,
   ClipboardCheck, ScrollText, Home, Send,
-  Settings, Download, BarChart3, CreditCard,
+  Settings, Download, BarChart3, CreditCard, UserCog,
 } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { ZoroWordmark } from '../shared/ZoroLogo';
@@ -58,6 +58,7 @@ const ADMIN_NAV = [
   {
     section: 'System',
     items: [
+      { to: '/admin/users',  icon: <UserCog size={ICON_SIZE} />,       label: 'User management' },
       { to: '/admin/audit',  icon: <ScrollText size={ICON_SIZE} />,    label: 'Audit log' },
       { to: '/settings',     icon: <Settings size={ICON_SIZE} />,      label: 'Settings' },
     ],

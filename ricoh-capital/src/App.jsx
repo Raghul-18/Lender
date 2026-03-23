@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Info } from 'lucide-react';
 import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './auth/AuthContext';
 import { AppProvider } from './context/AppContext';
@@ -21,6 +20,8 @@ import P05Welcome from './pages/onboarding/P05Welcome';
 import P04AdminReview from './pages/admin/P04AdminReview';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminDealQueue from './pages/admin/AdminDealQueue';
+import AuditLogPage from './pages/admin/AuditLogPage';
+import AdminUserManagement from './pages/admin/AdminUserManagement';
 
 // Portfolio
 import P10PortfolioDashboard from './pages/portfolio/P10PortfolioDashboard';
@@ -39,6 +40,7 @@ import P09Confirmation from './pages/deals/P09Confirmation';
 import P18ProspectList from './pages/crm/P18ProspectList';
 import P19ProspectProfile from './pages/crm/P19ProspectProfile';
 import ProspectForm from './pages/crm/ProspectForm';
+import ProspectEditPage from './pages/crm/ProspectEditPage';
 import P20QualifyConvert from './pages/crm/P20QualifyConvert';
 
 // Quotes
@@ -117,13 +119,12 @@ export default function App() {
                 } />
                 <Route path="/admin/audit" element={
                   <ProtectedRoute roles={['admin']}>
-                    <div className="page">
-                      <div className="page-header"><div className="page-title">Audit Log</div></div>
-                      <div className="info-banner blue">
-                        <Info size={14} style={{ color: 'var(--blue)', flexShrink: 0 }} />
-                        <div style={{ fontSize: 12 }}>Full audit log coming soon.</div>
-                      </div>
-                    </div>
+                    <AuditLogPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/users" element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminUserManagement />
                   </ProtectedRoute>
                 } />
 
@@ -193,7 +194,7 @@ export default function App() {
                 } />
                 <Route path="/crm/:id/edit" element={
                   <ProtectedRoute roles={['originator']} requireApproved>
-                    <ProspectForm />
+                    <ProspectEditPage />
                   </ProtectedRoute>
                 } />
                 <Route path="/crm/:id/convert" element={

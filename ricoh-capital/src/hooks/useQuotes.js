@@ -80,6 +80,57 @@ export function useSendQuote() {
   });
 }
 
+// Mark a sent quote as accepted → pre-fills deal store ready for wizard
+export function useAcceptQuote() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ quoteId }) => {
+      const { data, error } = await db.quotes()
+        .update({ status: 'accepted', updated_at: new Date().toISOString() })
+        .eq('id', quoteId)
+        .select()
+        .single();
+      if (error) throw error;
+
+      await db.notifications().insert({
+        user_id: user.id,
+        title: `Quote ${data.reference_number} accepted`,
+        body: `${data.customer_name} has accepted the quote. A deal has been initiated.`,
+        type: 'quote_update',
+        related_id: quoteId,
+      });
+
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: keys.quotes(user?.id) });
+      qc.invalidateQueries({ queryKey: keys.quote(data.id) });
+    },
+  });
+}
+
+// Mark a sent quote as rejected by customer
+export function useDeclineQuote() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ quoteId }) => {
+      const { data, error } = await db.quotes()
+        .update({ status: 'rejected', updated_at: new Date().toISOString() })
+        .eq('id', quoteId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: keys.quotes(user?.id) });
+      qc.invalidateQueries({ queryKey: keys.quote(data.id) });
+    },
+  });
+}
+
 // Calculate monthly payment
 export function calcMonthly(assetValue, deposit, termMonths, aprPct = 7.2) {
   const financed = assetValue - deposit;

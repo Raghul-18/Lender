@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { prospectSchema } from '../../schemas';
 import { useCreateProspect, useUpdateProspect } from '../../hooks/useProspects';
@@ -9,9 +10,13 @@ const INDUSTRIES = ['Construction', 'Transport & logistics', 'Manufacturing', 'H
 const PRODUCTS = ['Asset Finance', 'Equipment Leasing', 'Vehicle Finance', 'Working Capital', 'Invoice Finance'];
 
 export default function ProspectForm({ prospect, onSuccess, onCancel }) {
+  const navigate = useNavigate();
   const create = useCreateProspect();
   const update = useUpdateProspect();
   const isEdit = !!prospect;
+
+  const handleSuccess = () => onSuccess ? onSuccess() : navigate('/crm');
+  const handleCancel = () => onCancel ? onCancel() : navigate('/crm');
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(prospectSchema),
@@ -55,14 +60,14 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }) {
     } else {
       await create.mutateAsync(payload);
     }
-    onSuccess?.();
+    handleSuccess();
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="page-header">
         <div className="page-title">{isEdit ? 'Edit prospect' : 'Add new prospect'}</div>
-        <button type="button" className="btn btn-ghost" onClick={onCancel}>✕ Cancel</button>
+        <button type="button" className="btn btn-ghost" onClick={handleCancel}>✕ Cancel</button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -137,7 +142,7 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }) {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
-        <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
+        <button type="button" className="btn btn-ghost" onClick={handleCancel}>Cancel</button>
         <button type="submit" className="btn btn-primary" disabled={isSubmitting || create.isPending || update.isPending}>
           {(isSubmitting || create.isPending || update.isPending) ? <LoadingSpinner /> : (isEdit ? 'Save changes' : 'Add prospect →')}
         </button>

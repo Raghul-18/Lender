@@ -5,7 +5,13 @@ import { useDealStore } from '../../store/dealStore';
 import { dealInitiationSchema } from '../../schemas';
 import { FormField, LoadingSpinner } from '../../components/shared/FormField';
 import { useAuth } from '../../auth/AuthContext';
-import { Info } from 'lucide-react';
+import { Info, RefreshCw } from 'lucide-react';
+
+function makeRef() {
+  const y = new Date().getFullYear();
+  const n = Math.floor(Math.random() * 90000 + 10000);
+  return `REF-${y}-${n}`;
+}
 
 const PRODUCT_TYPES = [
   'Asset Finance — Hire Purchase',
@@ -23,10 +29,15 @@ export default function P06DealInitiation() {
   const { profile } = useAuth();
   const { initiation, setInitiation } = useDealStore();
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: zodResolver(dealInitiationSchema),
-    defaultValues: initiation,
+    defaultValues: {
+      ...initiation,
+      originatorReference: initiation.originatorReference || makeRef(),
+    },
   });
+
+  const currentRef = watch('originatorReference');
 
   const onSubmit = (data) => {
     setInitiation(data);
@@ -65,10 +76,16 @@ export default function P06DealInitiation() {
 
         <div className="card" style={{ marginBottom: 16 }}>
           <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 16 }}>End-client information</div>
-          <FormField label="Client / company name" required error={errors.customerName?.message}
-            hint="The company or individual being financed (your client, not your own company)">
-            <input {...register('customerName')} className="form-input" placeholder="TechWorks Solutions Ltd" autoFocus />
-          </FormField>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+            <FormField label="Client / company name" required error={errors.customerName?.message}
+              hint="The company or individual being financed">
+              <input {...register('customerName')} className="form-input" placeholder="TechWorks Solutions Ltd" autoFocus />
+            </FormField>
+            <FormField label="Client email" error={errors.customerEmail?.message}
+              hint="Used to invite the client to the customer portal after approval">
+              <input {...register('customerEmail')} className="form-input" type="email" placeholder="contact@techworks.co.uk" />
+            </FormField>
+          </div>
           <FormField label="Product type" required error={errors.productType?.message}>
             <select {...register('productType')} className="form-input">
               {PRODUCT_TYPES.map(t => <option key={t}>{t}</option>)}
@@ -79,9 +96,23 @@ export default function P06DealInitiation() {
         <div className="card" style={{ marginBottom: 16 }}>
           <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 16 }}>Deal reference</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-            <FormField label="Your reference" required error={errors.originatorReference?.message}
-              hint="Your internal ID for this deal">
-              <input {...register('originatorReference')} className="form-input" placeholder="AC-2025-0042" />
+            <FormField label="Your reference" hint="Auto-generated — you can edit if needed">
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  {...register('originatorReference')}
+                  className="form-input"
+                  style={{ fontFamily: "'DM Mono', monospace", fontSize: 13 }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ flexShrink: 0, padding: '0 10px' }}
+                  title="Generate new reference"
+                  onClick={() => setValue('originatorReference', makeRef(), { shouldDirty: true })}
+                >
+                  <RefreshCw size={13} />
+                </button>
+              </div>
             </FormField>
             <FormField label="Preferred start date" error={errors.preferredStartDate?.message}>
               <input {...register('preferredStartDate')} className="form-input" type="date" />

@@ -34,6 +34,7 @@ export const db = {
   quotes: () => supabase.from('quotes'),
   notifications: () => supabase.from('notifications'),
   auditLogs: () => supabase.from('audit_logs'),
+  amendments: () => supabase.from('deal_amendments'),
 };
 
 // ── Storage helpers ────────────────────────────────────────
@@ -83,6 +84,13 @@ export async function downloadDocumentBlob(filePath) {
   const { data, error } = await storage.documents.download(filePath);
   if (error) throw error;
   return data; // Blob
+}
+
+// ── Utility: call admin Edge Functions ───────────────────────
+export async function invokeAdminFunction(name, body = {}) {
+  const { data, error } = await supabase.functions.invoke(name, { body });
+  if (error) throw error;
+  return data;
 }
 
 // ── Utility: log audit event ──────────────────────────────

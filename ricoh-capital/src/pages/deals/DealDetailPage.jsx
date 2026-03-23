@@ -1,10 +1,122 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, CheckCircle, XCircle, Clock, Send, FileText,
-  Building2, Wrench, CreditCard, Info, ExternalLink,
+  Building2, Wrench, CreditCard, Info, ExternalLink, Plus,
 } from 'lucide-react';
 import { useDeal } from '../../hooks/useDeals';
+import { useDealAmendments, useRequestAmendment } from '../../hooks/useAmendments';
+import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
+
+const AMENDMENT_TYPES = [
+  { value: 'term_extension',  label: 'Term extension' },
+  { value: 'payment_holiday', label: 'Payment holiday' },
+  { value: 'settlement',      label: 'Early settlement' },
+  { value: 'rate_change',     label: 'Rate change' },
+  { value: 'other',           label: 'Other variation' },
+];
+
+const AMEND_STATUS_META = {
+  pending:      { label: 'Pending',      color: 'var(--blue)' },
+  under_review: { label: 'In review',    color: 'var(--amber)' },
+  approved:     { label: 'Approved',     color: 'var(--green)' },
+  rejected:     { label: 'Declined',     color: 'var(--red)' },
+};
+
+function AmendmentPanel({ dealId, isApproved }) {
+  const { showToast } = useAppContext();
+  const { data: amendments = [], isLoading } = useDealAmendments(dealId);
+  const request = useRequestAmendment();
+  const [showForm, setShowForm] = useState(false);
+  const [type, setType] = useState('other');
+  const [desc, setDesc] = useState('');
+
+  const handleSubmit = async () => {
+    if (!desc.trim()) return;
+    try {
+      await request.mutateAsync({ dealId, amendmentType: type, description: desc });
+      showToast('Amendment request submitted', 'success');
+      setDesc('');
+      setShowForm(false);
+    } catch (err) { showToast(err.message, 'error'); }
+  };
+
+  return (
+    <div className="card" style={{ marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ fontWeight: 600, fontSize: 13 }}>Amendment requests</div>
+        {isApproved && !showForm && (
+          <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setShowForm(true)}>
+            <Plus size={12} /> Request variation
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <div style={{ background: 'var(--bg)', border: '1px solid var(--bdr)', borderRadius: 'var(--rl)', padding: 14, marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10 }}>New amendment request</div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 11, color: 'var(--tx3)', display: 'block', marginBottom: 4 }}>Type</label>
+            <select className="form-input" value={type} onChange={e => setType(e.target.value)} style={{ fontSize: 12 }}>
+              {AMENDMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 11, color: 'var(--tx3)', display: 'block', marginBottom: 4 }}>Description *</label>
+            <textarea
+              className="form-input"
+              rows={3}
+              style={{ resize: 'vertical', fontSize: 12 }}
+              placeholder="Describe the change you'd like to request…"
+              value={desc}
+              onChange={e => setDesc(e.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setShowForm(false)}>Cancel</button>
+            <button className="btn btn-primary" style={{ fontSize: 11 }} onClick={handleSubmit} disabled={!desc.trim() || request.isPending}>
+              {request.isPending ? <LoadingSpinner size={11} /> : 'Submit request'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div style={{ padding: '12px 0', textAlign: 'center' }}><LoadingSpinner size={16} /></div>
+      ) : amendments.length === 0 ? (
+        <div style={{ fontSize: 12, color: 'var(--tx4)', textAlign: 'center', padding: '16px 0' }}>
+          {isApproved ? 'No amendment requests yet.' : 'Amendment requests are available for approved deals.'}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {amendments.map(a => {
+            const sm = AMEND_STATUS_META[a.status] || AMEND_STATUS_META.pending;
+            return (
+              <div key={a.id} style={{ border: '1px solid var(--bdr)', borderRadius: 'var(--rl)', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>
+                    {AMENDMENT_TYPES.find(t => t.value === a.amendment_type)?.label || a.amendment_type}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: sm.color }}>{sm.label}</span>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.5 }}>{a.description}</div>
+                {a.admin_notes && (
+                  <div style={{ fontSize: 11, color: 'var(--tx4)', marginTop: 6, borderTop: '1px solid var(--bdr)', paddingTop: 6 }}>
+                    Admin: {a.admin_notes}
+                  </div>
+                )}
+                <div style={{ fontSize: 10, color: 'var(--tx4)', marginTop: 4 }}>
+                  {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const STATUS_META = {
   draft:        { label: 'Draft',        color: 'var(--tx3)',   icon: <FileText size={16} />,     step: 0 },
@@ -34,6 +146,7 @@ export default function DealDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: deal, isLoading } = useDeal(id);
+  const isApproved = deal?.status === 'approved';
 
   if (isLoading) return <div className="page-loading"><LoadingSpinner size={24} /></div>;
   if (!deal) return <div className="page-error">Deal not found.</div>;
@@ -41,7 +154,6 @@ export default function DealDetailPage() {
   const sm = STATUS_META[deal.status] || STATUS_META.submitted;
   const currentStep = sm.step;
   const isRejected = deal.status === 'rejected';
-  const isApproved = deal.status === 'approved';
 
   return (
     <div className="page">
@@ -167,6 +279,9 @@ export default function DealDetailPage() {
             <Row label="Year" value={deal.asset_year} />
             <Row label="Value" value={`£${(deal.asset_value || 0).toLocaleString()}`} />
           </div>
+
+          {/* Amendment requests */}
+          <AmendmentPanel dealId={id} isApproved={isApproved} />
         </div>
 
         {/* Right column — finance summary */}

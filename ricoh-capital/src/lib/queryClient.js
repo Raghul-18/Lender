@@ -37,4 +37,6 @@ export const keys = {
   adminDeals: () => ['admin', 'deals'],
   adminStats: () => ['admin', 'stats'],
   auditLogs: () => ['admin', 'auditLogs'],
+  amendments: (dealId) => ['amendments', dealId],
+  adminAmendments: () => ['admin', 'amendments'],
 };

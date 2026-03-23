@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, logAudit } from '../lib/supabase';
+import { db, logAudit, supabase } from '../lib/supabase';
 import { keys } from '../lib/queryClient';
 import { useAuth } from '../auth/AuthContext';
 import { useDealStore } from '../store/dealStore';
@@ -48,6 +48,7 @@ export function useSubmitDeal() {
       const payload = {
         originator_id: user.id,
         customer_name: initiation.customerName,
+        customer_email: initiation.customerEmail || null,
         product_type: initiation.productType,
         originator_reference: initiation.originatorReference,
         preferred_start_date: initiation.preferredStartDate || null,
@@ -114,7 +115,7 @@ export function useApproveDeal() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ dealId, adminNotes, startDate }) => {
+    mutationFn: async ({ dealId, adminNotes, startDate, customerEmail }) => {
       // 1. Fetch the deal
       const { data: deal, error: dealErr } = await db.deals()
         .select('*')
@@ -141,6 +142,10 @@ export function useApproveDeal() {
       nextPayment.setMonth(nextPayment.getMonth() + 1);
 
       // 4. Create the contract
+      const year = new Date().getFullYear();
+      const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+      const contractRef = `CON-${year}-${rand}`;
+
       const { data: contract, error: contractErr } = await db.contracts()
         .insert({
           deal_id: deal.id,
@@ -154,6 +159,7 @@ export function useApproveDeal() {
           end_date: end.toISOString().slice(0, 10),
           next_payment_date: nextPayment.toISOString().slice(0, 10),
           status: 'active',
+          reference_number: contractRef,
         })
         .select()
         .single();
@@ -185,7 +191,29 @@ export function useApproveDeal() {
         related_id: contract.id,
       });
 
-      await logAudit('deal', dealId, 'approved', { contract_id: contract.id, reviewed_by: user.id });
+      // 7. Invite customer to portal if an email was provided
+      const emailToInvite = customerEmail || deal.customer_email;
+      if (emailToInvite) {
+        try {
+          await supabase.functions.invoke('invite-customer', {
+            body: {
+              email: emailToInvite,
+              customerName: deal.customer_name,
+              contractId: contract.id,
+              dealId,
+            },
+          });
+        } catch (inviteErr) {
+          // Non-fatal: log but don't fail the approval
+          console.warn('Customer invite failed (deploy Edge Function to enable):', inviteErr);
+        }
+      }
+
+      await logAudit('deal', dealId, 'approved', {
+        contract_id: contract.id,
+        reviewed_by: user.id,
+        customer_invited: !!emailToInvite,
+      });
       return { deal, contract };
     },
     onSuccess: () => {
