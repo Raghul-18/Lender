@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useContract, usePaymentSchedule } from '../../hooks/useContracts';
+import { CheckCircle, XCircle } from 'lucide-react';
+import { useContract, usePaymentSchedule, useMarkPaymentPaid, useCancelContract } from '../../hooks/useContracts';
+import { useAuth } from '../../auth/AuthContext';
+import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
 
 const STATUS_META = {
-  active:    { label: 'Active',   color: 'var(--green)',  dot: '#22c55e' },
-  overdue:   { label: 'Overdue',  color: 'var(--red)',    dot: '#ef4444' },
-  maturing:  { label: 'Maturing', color: 'var(--amber)',  dot: '#f59e0b' },
-  completed: { label: 'Completed', color: 'var(--tx3)',   dot: 'var(--tx4)' },
+  active:     { label: 'Active',    color: 'var(--green)',  dot: '#22c55e' },
+  overdue:    { label: 'Overdue',   color: 'var(--red)',    dot: '#ef4444' },
+  maturing:   { label: 'Maturing',  color: 'var(--amber)',  dot: '#f59e0b' },
+  completed:  { label: 'Completed', color: 'var(--tx3)',    dot: 'var(--tx4)' },
+  cancelled:  { label: 'Cancelled', color: 'var(--tx4)',    dot: 'var(--tx4)' },
 };
 
 const PAYMENT_META = {
@@ -19,11 +24,19 @@ const PAYMENT_META = {
 export default function P12AssetDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin, isCustomer } = useAuth();
+  const { showToast } = useAppContext();
   const { data: contract, isLoading: contractLoading } = useContract(id);
   const { data: schedule = [], isLoading: scheduleLoading } = usePaymentSchedule(id);
+  const markPaid = useMarkPaymentPaid();
+  const cancelContract = useCancelContract();
+  const [cancelConfirm, setCancelConfirm] = useState(false);
 
   if (contractLoading) return <div className="page-loading"><LoadingSpinner size={24} /></div>;
   if (!contract) return <div className="page-error">Contract not found.</div>;
+
+  const backPath = isCustomer ? '/portal/dashboard' : '/portfolio';
+  const backLabel = isCustomer ? '← Dashboard' : '← Portfolio';
 
   const sm = STATUS_META[contract.status] || STATUS_META.active;
   const paidPayments = schedule.filter(p => p.status === 'paid').length;
@@ -31,11 +44,30 @@ export default function P12AssetDetail() {
   const totalPaid = schedule.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0);
   const outstanding = (schedule.length - paidPayments) * (contract.monthly_payment || 0);
 
+  const handleMarkPaid = async (paymentId) => {
+    try {
+      await markPaid.mutateAsync({ paymentId, contractId: id });
+      showToast('Payment marked as paid', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to mark payment', 'error');
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      await cancelContract.mutateAsync(id);
+      showToast('Contract cancelled', 'success');
+      setCancelConfirm(false);
+    } catch (err) {
+      showToast(err.message || 'Failed to cancel contract', 'error');
+    }
+  };
+
   return (
     <div className="page">
       <div className="page-header">
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <button className="btn btn-ghost" onClick={() => navigate('/portfolio')}>← Portfolio</button>
+          <button className="btn btn-ghost" onClick={() => navigate(backPath)}>{backLabel}</button>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div className="page-title">{contract.customer_name}</div>
@@ -48,6 +80,27 @@ export default function P12AssetDetail() {
             </div>
           </div>
         </div>
+
+        {/* Admin: cancel contract */}
+        {isAdmin && contract.status !== 'cancelled' && contract.status !== 'completed' && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {cancelConfirm ? (
+              <>
+                <span style={{ fontSize: 12, color: 'var(--red)' }}>Confirm cancel?</span>
+                <button className="btn btn-ghost" style={{ fontSize: 11, color: 'var(--red)', border: '1px solid var(--red-m)' }} onClick={handleCancel} disabled={cancelContract.isPending}>
+                  <XCircle size={12} /> Yes, cancel
+                </button>
+                <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setCancelConfirm(false)}>
+                  Keep
+                </button>
+              </>
+            ) : (
+              <button className="btn btn-ghost" style={{ fontSize: 11, color: 'var(--red)', border: '1px solid var(--red-m)' }} onClick={() => setCancelConfirm(true)}>
+                <XCircle size={12} /> Cancel contract
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* KPI row */}
@@ -123,11 +176,13 @@ export default function P12AssetDetail() {
                     <th style={{ textAlign: 'right' }}>Amount</th>
                     <th>Status</th>
                     <th>Paid on</th>
+                    {isAdmin && <th style={{ width: 80 }} />}
                   </tr>
                 </thead>
                 <tbody>
                   {schedule.map(p => {
                     const pm = PAYMENT_META[p.status] || PAYMENT_META.upcoming;
+                    const canMarkPaid = isAdmin && p.status !== 'paid';
                     return (
                       <tr key={p.id}>
                         <td style={{ color: 'var(--tx4)', fontSize: 11 }}>{p.payment_number}</td>
@@ -139,6 +194,20 @@ export default function P12AssetDetail() {
                         <td style={{ fontSize: 11, color: 'var(--tx4)' }}>
                           {p.paid_at ? new Date(p.paid_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
                         </td>
+                        {isAdmin && (
+                          <td>
+                            {canMarkPaid && (
+                              <button
+                                className="btn btn-ghost"
+                                style={{ fontSize: 10, padding: '2px 8px', color: 'var(--green)' }}
+                                onClick={() => handleMarkPaid(p.id)}
+                                disabled={markPaid.isPending}
+                              >
+                                <CheckCircle size={10} /> Paid
+                              </button>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })}

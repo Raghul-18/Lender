@@ -61,8 +61,8 @@ Deno.serve(async (req: Request) => {
     const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
       email,
       {
-        data: { role: 'customer', full_name: customerName },
-        redirectTo: `${Deno.env.get('SITE_URL') ?? 'http://localhost:5173'}/login`,
+        data: { role: 'customer', full_name: customerName, needs_password_setup: true },
+        redirectTo: `${Deno.env.get('SITE_URL') ?? 'http://localhost:5173'}/portal/dashboard`,
       }
     );
 

@@ -55,7 +55,7 @@ export function PublicRoute({ children }) {
 function getDefaultPath(profile) {
   if (!profile) return '/login';
   switch (profile.role) {
-    case 'admin':     return '/admin/review';
+    case 'admin':     return '/admin';
     case 'customer':  return '/portal/dashboard';
     case 'originator':
       if (profile.onboarding_status === 'approved') return '/portfolio';
@@ -71,6 +71,7 @@ function getOnboardingPath(status) {
     case 'under_review':   return '/onboarding/verification';
     case 'info_requested': return '/onboarding/documents';
     case 'submitted':      return '/onboarding/verification';
+    case 'deactivated':    return '/account-deactivated';
     case 'pending': {
       // Resume to the furthest completed step using persisted Zustand state
       const { registration, documents } = useOnboardingStore.getState();

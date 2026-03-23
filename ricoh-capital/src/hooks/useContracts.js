@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '../lib/supabase';
 import { keys } from '../lib/queryClient';
 import { useAuth } from '../auth/AuthContext';
@@ -80,6 +80,41 @@ export function usePaymentSchedule(contractId) {
       return data || [];
     },
     enabled: !!contractId,
+  });
+}
+
+// Admin: mark a single payment as paid
+export function useMarkPaymentPaid() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ paymentId, contractId }) => {
+      const { error } = await db.paymentSchedule()
+        .update({ status: 'paid', paid_at: new Date().toISOString() })
+        .eq('id', paymentId);
+      if (error) throw error;
+    },
+    onSuccess: (_, { contractId }) => {
+      qc.invalidateQueries({ queryKey: keys.paymentSchedule(contractId) });
+      qc.invalidateQueries({ queryKey: keys.contract(contractId) });
+    },
+  });
+}
+
+// Admin: cancel a contract
+export function useCancelContract() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (contractId) => {
+      const { error } = await db.contracts()
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('id', contractId);
+      if (error) throw error;
+    },
+    onSuccess: (_, contractId) => {
+      qc.invalidateQueries({ queryKey: keys.contract(contractId) });
+      qc.invalidateQueries({ queryKey: keys.contracts(user?.id) });
+    },
   });
 }
 

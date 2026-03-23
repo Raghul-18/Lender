@@ -9,6 +9,7 @@ import AppShell from './components/layout/AppShell';
 // Auth pages (no shell)
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 
 // Onboarding
 import P01Registration from './pages/onboarding/P01Registration';
@@ -58,6 +59,10 @@ import P16AccountActions from './pages/selfservice/P16AccountActions';
 // Settings
 import SettingsPage from './pages/settings/SettingsPage';
 
+// Utility pages
+import AccountDeactivatedPage from './pages/auth/AccountDeactivatedPage';
+import NotFoundPage from './pages/NotFoundPage';
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -72,6 +77,7 @@ export default function App() {
               <Route path="/signup" element={
                 <PublicRoute><SignupPage /></PublicRoute>
               } />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
               {/* ── Authenticated shell ── */}
               <Route element={
@@ -253,11 +259,16 @@ export default function App() {
                     <SettingsPage />
                   </ProtectedRoute>
                 } />
+
+                {/* ── 404 inside the shell (authenticated users who mistype a URL) ── */}
+                <Route path="*" element={<NotFoundPage />} />
               </Route>
+
+              {/* Deactivated account (outside shell, no nav) */}
+              <Route path="/account-deactivated" element={<AccountDeactivatedPage />} />
 
               {/* Default redirect */}
               <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </AppProvider>
         </AuthProvider>

@@ -76,6 +76,15 @@ Deno.serve(async (req: Request) => {
     .select('*', { count: 'exact', head: true });
   results.completed = completedCount ?? 0;
 
+  // 6. Expire quotes past their valid_until date
+  const { count: expiredQuoteCount } = await supabaseAdmin
+    .from('quotes')
+    .update({ status: 'expired' })
+    .in('status', ['draft', 'sent'])
+    .lt('valid_until', todayStr)
+    .select('*', { count: 'exact', head: true });
+  results.expired_quotes = expiredQuoteCount ?? 0;
+
   // Log audit entry
   await supabaseAdmin.from('audit_logs').insert({
     entity_type: 'system',

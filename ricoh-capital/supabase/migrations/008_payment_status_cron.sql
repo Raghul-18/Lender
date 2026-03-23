@@ -50,6 +50,12 @@ begin
       where ps.contract_id = c.id and ps.status = 'overdue'
     );
 
+  -- 6. Expire quotes past their valid_until date
+  update public.quotes
+  set status = 'expired'
+  where status in ('draft', 'sent')
+    and valid_until < v_today;
+
   -- Log the run
   insert into public.audit_logs (entity_type, action, details)
   values ('system', 'status_change', jsonb_build_object(

@@ -91,7 +91,10 @@ function PasswordSection() {
   const onSubmit = async (data) => {
     setSaving(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: data.newPassword });
+      const { error } = await supabase.auth.updateUser({
+        password: data.newPassword,
+        data: { needs_password_setup: false },
+      });
       if (error) throw error;
       reset();
       setDone(true);
