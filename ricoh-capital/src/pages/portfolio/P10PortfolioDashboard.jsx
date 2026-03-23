@@ -76,7 +76,7 @@ export default function P10PortfolioDashboard() {
       </div>
 
       {/* KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="kpi-row">
         {kpis.map(kpi => (
           <div key={kpi.label} className="metric-card">
             <div style={{ color: kpi.color, marginBottom: 10 }}>{kpi.icon}</div>
@@ -90,7 +90,7 @@ export default function P10PortfolioDashboard() {
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           className="form-input"
-          style={{ width: 240, height: 34, fontSize: 12 }}
+          style={{ width: '100%', maxWidth: 240, height: 34, fontSize: 12 }}
           placeholder="Search customer, ref or asset…"
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -132,7 +132,7 @@ export default function P10PortfolioDashboard() {
           </div>
         </div>
       ) : (
-        <div className="portfolio-table-wrap">
+        <div className="portfolio-table-wrap table-scroll">
           <table className="data-table">
             <thead>
               <tr>

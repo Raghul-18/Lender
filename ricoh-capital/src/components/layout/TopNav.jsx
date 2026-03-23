@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, ChevronRight, LogOut } from 'lucide-react';
+import { Bell, ChevronRight, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
 
@@ -52,7 +52,7 @@ function getBreadcrumbs(pathname) {
   return ['Dashboard'];
 }
 
-export default function TopNav() {
+export default function TopNav({ onMenuToggle }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
@@ -66,6 +66,16 @@ export default function TopNav() {
 
   return (
     <div className="topnav">
+      {/* Hamburger — mobile only */}
+      <button
+        className="btn btn-ghost mobile-only"
+        style={{ padding: '6px 8px', border: 'none', flexShrink: 0 }}
+        onClick={onMenuToggle}
+        aria-label="Open menu"
+      >
+        <Menu size={18} style={{ color: 'var(--tx2)' }} />
+      </button>
+
       {/* Breadcrumbs */}
       <div className="breadcrumbs">
         {crumbs.map((crumb, i) => (

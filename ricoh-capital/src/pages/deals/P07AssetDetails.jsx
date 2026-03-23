@@ -90,7 +90,7 @@ export default function P07AssetDetails() {
                 {ASSET_TYPES.map(t => <option key={t}>{t}</option>)}
               </select>
             </FormField>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
+            <div className="two-col-equal" style={{ gap: '0 12px' }}>
               <FormField label="Make" required error={errors.make?.message}>
                 <input {...register('make')} className="form-input" placeholder="Mercedes-Benz" />
               </FormField>
@@ -98,7 +98,7 @@ export default function P07AssetDetails() {
                 <input {...register('model')} className="form-input" placeholder="Sprinter 316 CDI" />
               </FormField>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
+            <div className="two-col-equal" style={{ gap: '0 12px' }}>
               <FormField label="Year" required error={errors.year?.message}>
                 <select {...register('year', { valueAsNumber: true })} className="form-input">
                   {YEARS.map(y => <option key={y}>{y}</option>)}
@@ -112,7 +112,7 @@ export default function P07AssetDetails() {
 
           <div className="card">
             <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 16 }}>Finance structure</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
+            <div className="two-col-equal" style={{ gap: '0 12px' }}>
               <FormField label="Term (months)" required error={errors.termMonths?.message}>
                 <select {...register('termMonths', { valueAsNumber: true })} className="form-input">
                   {TERMS.map(t => <option key={t} value={t}>{t} months</option>)}
@@ -125,7 +125,7 @@ export default function P07AssetDetails() {
                 </select>
               </FormField>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
+            <div className="two-col-equal" style={{ gap: '0 12px' }}>
               <FormField label="Deposit (£)" error={errors.deposit?.message}>
                 <input {...register('deposit', { valueAsNumber: true })} className="form-input" type="number" min="0" step="100" placeholder="0" />
               </FormField>

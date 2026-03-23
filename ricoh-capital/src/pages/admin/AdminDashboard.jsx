@@ -92,7 +92,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* KPI grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+      <div className="three-col" style={{ marginBottom: 24 }}>
         {kpis.map(kpi => (
           <div
             key={kpi.label}
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="two-col-equal">
         {/* Deals awaiting review */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>

@@ -160,7 +160,8 @@ function InviteAdminModal({ onClose }) {
 function UserRow({ user, onPasswordReset }) {
   const deactivate = useDeactivateUser();
   const reactivate = useReactivateUser();
-  const { showToast, confirm } = useAppContext();
+  const { showToast } = useAppContext();
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
 
   const roleMeta = ROLE_META[user.role] || { label: user.role, color: 'var(--tx3)' };
   const statusMeta = STATUS_META[user.onboarding_status] || STATUS_META.pending;
@@ -168,16 +169,10 @@ function UserRow({ user, onPasswordReset }) {
   const isAdmin = user.role === 'admin';
 
   const handleDeactivate = async () => {
-    const ok = await confirm({
-      title: 'Deactivate account',
-      message: `This will block ${user.full_name || user.email} from accessing the platform. You can reactivate at any time.`,
-      confirmLabel: 'Deactivate',
-      variant: 'danger',
-    });
-    if (!ok) return;
     try {
       await deactivate.mutateAsync({ userId: user.id });
       showToast('Account deactivated', 'success');
+      setConfirmDeactivate(false);
     } catch (err) { showToast(err.message, 'error'); }
   };
 
@@ -250,15 +245,32 @@ function UserRow({ user, onPasswordReset }) {
             >
               {reactivate.isPending ? <LoadingSpinner size={10} /> : <Power size={11} />}
             </button>
+          ) : confirmDeactivate ? (
+            <>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: 10, padding: '3px 8px', height: 26, color: 'var(--red)', border: '1px solid var(--red-m)' }}
+                onClick={handleDeactivate}
+                disabled={deactivate.isPending}
+              >
+                {deactivate.isPending ? <LoadingSpinner size={10} /> : 'Confirm'}
+              </button>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: 10, padding: '3px 8px', height: 26 }}
+                onClick={() => setConfirmDeactivate(false)}
+              >
+                Cancel
+              </button>
+            </>
           ) : (
             <button
               className="btn btn-ghost"
               style={{ fontSize: 10, padding: '3px 8px', height: 26, color: 'var(--red)' }}
               title="Deactivate account"
-              onClick={handleDeactivate}
-              disabled={deactivate.isPending}
+              onClick={() => setConfirmDeactivate(true)}
             >
-              {deactivate.isPending ? <LoadingSpinner size={10} /> : <XCircle size={11} />}
+              <XCircle size={11} />
             </button>
           )
         )}
@@ -276,7 +288,7 @@ export default function AdminUserManagement() {
   const { data: users = [], isLoading } = useAllUsers(roleFilter);
   const sendReset = useSendPasswordReset();
   const refreshPayments = useRefreshPaymentStatuses();
-  const { showToast, confirm } = useAppContext();
+  const { showToast } = useAppContext();
 
   const filtered = users.filter(u => {
     if (!search) return true;
@@ -296,12 +308,6 @@ export default function AdminUserManagement() {
   };
 
   const handlePasswordReset = async (email) => {
-    const ok = await confirm({
-      title: 'Send password reset',
-      message: `Send a password reset email to ${email}?`,
-      confirmLabel: 'Send email',
-    });
-    if (!ok) return;
     try {
       await sendReset.mutateAsync({ email });
       showToast(`Password reset email sent to ${email}`, 'success');
@@ -342,7 +348,7 @@ export default function AdminUserManagement() {
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+      <div className="kpi-row" style={{ gap: 10, marginBottom: 20 }}>
         {[
           { key: 'all',        label: 'Total users',   color: 'var(--tx)' },
           { key: 'admin',      label: 'Admins',        color: 'var(--coral)' },
@@ -388,7 +394,7 @@ export default function AdminUserManagement() {
       </div>
 
       {/* Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card table-scroll" style={{ padding: 0, overflow: 'hidden' }}>
         {/* Header */}
         <div style={{
           display: 'grid',

@@ -104,7 +104,7 @@ export default function P12AssetDetail() {
       </div>
 
       {/* KPI row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="kpi-row">
         {[
           { label: 'Monthly payment', value: `£${(contract.monthly_payment || 0).toLocaleString()}` },
           { label: 'Asset value', value: `£${(contract.asset_value || 0).toLocaleString()}` },
@@ -118,7 +118,7 @@ export default function P12AssetDetail() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 16 }}>
+      <div className="two-col">
         {/* Left: contract details */}
         <div>
           <div className="card" style={{ marginBottom: 12 }}>

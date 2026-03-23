@@ -25,9 +25,9 @@ export default function P15CustomerDashboard() {
   }, 0);
 
   const kpis = [
-    { label: 'Active agreements',   value: activeContracts.length,    icon: <FileText size={18} />,    color: 'var(--blue)' },
-    { label: 'Overdue payments',    value: overdueContracts.length,   icon: <AlertCircle size={18} />, color: overdueContracts.length > 0 ? 'var(--red)' : 'var(--green)' },
-    { label: 'Total outstanding',   value: `£${(totalOutstanding / 1000).toFixed(1)}k`, icon: <TrendingUp size={18} />, color: 'var(--coral)' },
+    { label: 'Active agreements', value: activeContracts.length,    icon: <FileText size={18} />,    color: 'var(--blue)' },
+    { label: 'Overdue payments',  value: overdueContracts.length,   icon: <AlertCircle size={18} />, color: overdueContracts.length > 0 ? 'var(--red)' : 'var(--green)' },
+    { label: 'Total outstanding', value: `£${(totalOutstanding / 1000).toFixed(1)}k`, icon: <TrendingUp size={18} />, color: 'var(--coral)' },
   ];
 
   if (isLoading) return <div className="page-loading"><LoadingSpinner size={24} /></div>;
@@ -45,7 +45,7 @@ export default function P15CustomerDashboard() {
       </div>
 
       {/* KPI row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="kpi-row-3">
         {kpis.map(kpi => (
           <div key={kpi.label} className="metric-card">
             <div style={{ color: kpi.color, marginBottom: 10 }}>{kpi.icon}</div>

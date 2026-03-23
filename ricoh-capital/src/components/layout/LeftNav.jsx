@@ -89,7 +89,7 @@ const ONBOARDING_NAV = [
   },
 ];
 
-export default function LeftNav({ collapsed, onToggle }) {
+export default function LeftNav({ collapsed, navOpen, onToggle, onClose }) {
   const { profile, isAdmin, isOriginator, isCustomer, isApproved } = useAuth();
 
   let navSections;
@@ -101,8 +101,14 @@ export default function LeftNav({ collapsed, onToggle }) {
 
   const initials = profile?.avatar_initials || profile?.full_name?.[0] || '?';
 
+  const navClass = [
+    'leftnav',
+    collapsed ? 'leftnav-collapsed' : '',
+    navOpen   ? 'nav-mobile-open'   : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <div className={`leftnav${collapsed ? ' leftnav-collapsed' : ''}`}>
+    <div className={navClass}>
 
       {/* Logo + toggle */}
       <div className="leftnav-logo">
@@ -112,12 +118,22 @@ export default function LeftNav({ collapsed, onToggle }) {
             : <ZoroWordmark size={28} gap={9} fontSize={14} />
           }
         </div>
+        {/* Desktop collapse button — hidden on mobile via CSS */}
         <button
           onClick={onToggle}
-          className="nav-collapse-btn"
+          className="nav-collapse-btn desktop-only"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
+        {/* Mobile close button — hidden on desktop via CSS */}
+        <button
+          onClick={onClose}
+          className="nav-collapse-btn mobile-only"
+          title="Close menu"
+          style={{ display: 'none' }}
+        >
+          <ChevronLeft size={14} />
         </button>
       </div>
 
@@ -136,6 +152,7 @@ export default function LeftNav({ collapsed, onToggle }) {
                 end={['/portfolio', '/crm', '/portal/dashboard'].includes(item.to)}
                 className={({ isActive }) => `nav-item${collapsed ? ' nav-item-collapsed' : ''}${isActive ? ' active' : ''}`}
                 title={collapsed ? item.label : undefined}
+                onClick={onClose}
               >
                 <span className="nav-icon">{item.icon}</span>
                 {!collapsed && <span>{item.label}</span>}

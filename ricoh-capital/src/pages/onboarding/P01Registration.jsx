@@ -89,7 +89,7 @@ export default function P01Registration() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="card" style={{ marginBottom: 16 }}>
           <div style={{ fontWeight: 600, marginBottom: 16, fontSize: 13 }}>Company information</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+          <div className="two-col-equal" style={{ gap: '0 16px' }}>
             <FormField label="Registered company name" required error={errors.companyName?.message}>
               <input {...register('companyName')} className="form-input" placeholder="Acme Finance Ltd" autoFocus />
             </FormField>
@@ -111,7 +111,7 @@ export default function P01Registration() {
 
         <div className="card" style={{ marginBottom: 16 }}>
           <div style={{ fontWeight: 600, marginBottom: 16, fontSize: 13 }}>Primary contact</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+          <div className="two-col-equal" style={{ gap: '0 16px' }}>
             <FormField label="First name" required error={errors.contactFirstName?.message}>
               <input {...register('contactFirstName')} className="form-input" placeholder="Jane" />
             </FormField>
@@ -119,7 +119,7 @@ export default function P01Registration() {
               <input {...register('contactLastName')} className="form-input" placeholder="Smith" />
             </FormField>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+          <div className="two-col-equal" style={{ gap: '0 16px' }}>
             <FormField label="Work email" required error={errors.contactEmail?.message}>
               <input {...register('contactEmail')} className="form-input" type="email" placeholder="jane@company.com" />
             </FormField>
@@ -137,7 +137,7 @@ export default function P01Registration() {
           {errors.productLines && (
             <div style={{ fontSize: 11, color: 'var(--red)', marginBottom: 10 }}>{errors.productLines.message}</div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="two-col-equal" style={{ gap: 10 }}>
             {PRODUCT_LINES.map(p => {
               const active = selectedProducts.includes(p.id);
               return (

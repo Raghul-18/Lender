@@ -91,6 +91,22 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {/* Demo credentials helper */}
+        <div style={{ marginTop: 20, background: 'var(--surface)', border: '1px solid var(--bdr)', borderRadius: 'var(--rl)', padding: '14px 18px' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--tx4)', letterSpacing: '.6px', marginBottom: 10 }}>Demo accounts</div>
+          {[
+            { role: 'Originator', email: 'james@acmefinance.co.uk',  password: 'Test123!' },
+            { role: 'Admin',      email: 'admin@zorocapital.com',    password: 'Admin123!' },
+            { role: 'Customer',   email: 'contact@techworks.co.uk',  password: 'Test123!' },
+          ].map(d => (
+            <div key={d.role} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, fontSize: 11 }}>
+              <span className={`tag ${d.role === 'Originator' ? 'coral' : d.role === 'Admin' ? 'blue' : 'green'}`}>{d.role}</span>
+              <span style={{ fontFamily: "'DM Mono', monospace", color: 'var(--tx2)', fontSize: 10 }}>{d.email}</span>
+              <span style={{ color: 'var(--tx4)', fontSize: 10 }}>/ {d.password}</span>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );
