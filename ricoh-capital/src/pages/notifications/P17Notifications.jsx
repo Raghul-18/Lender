@@ -63,7 +63,7 @@ export default function P17Notifications() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: n.read ? 500 : 700, fontSize: 13, marginBottom: 3 }}>{n.title}</div>
-                  {n.message && <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.5 }}>{n.message}</div>}
+                  {n.body && <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.5 }}>{n.body}</div>}
                   <div style={{ fontSize: 10, color: 'var(--tx4)', marginTop: 6 }}>
                     {new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </div>

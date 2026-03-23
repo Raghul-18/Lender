@@ -1,6 +1,9 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-export const useDealStore = create((set, get) => ({
+export const useDealStore = create(
+  persist(
+  (set, get) => ({
   // Step 1 data
   initiation: {
     customerName: '',
@@ -57,4 +60,9 @@ export const useDealStore = create((set, get) => ({
     submittedDealId: null,
     submittedRefNumber: null,
   }),
-}));
+  }),
+  {
+    name: 'zoro-deal',
+    partialize: (s) => ({ initiation: s.initiation, assetDetails: s.assetDetails }),
+  }
+));

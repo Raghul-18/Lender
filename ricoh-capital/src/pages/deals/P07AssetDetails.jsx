@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Check } from 'lucide-react';
 import { useDealStore } from '../../store/dealStore';
 import { assetDetailsSchema } from '../../schemas';
 import { FormField } from '../../components/shared/FormField';
@@ -73,7 +74,7 @@ export default function P07AssetDetails() {
       <div className="steps-row" style={{ marginBottom: 24 }}>
         {['Initiation', 'Asset details', 'Review & submit'].map((s, i) => (
           <div key={s} className={`step ${i === 1 ? 'active' : i < 1 ? 'done' : ''}`}>
-            <div className="step-dot">{i < 1 ? '✓' : i + 1}</div>
+            <div className="step-dot">{i < 1 ? <Check size={12} /> : i + 1}</div>
             <div className="step-label">{s}</div>
           </div>
         ))}

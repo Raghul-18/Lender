@@ -14,14 +14,14 @@ const ACTIVITY_ICON = {
   stage_change: <ArrowLeftRight size={14} />,
 };
 
-const STAGE_OPTIONS = ['lead','qualified','proposal','negotiation','won','lost'];
+const STAGE_OPTIONS = ['New lead', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
 const STAGE_META = {
-  lead:        { label: 'Lead',       color: 'var(--tx3)' },
-  qualified:   { label: 'Qualified',  color: 'var(--blue)' },
-  proposal:    { label: 'Proposal',   color: 'var(--amber)' },
-  negotiation: { label: 'Negotiation',color: 'var(--coral)' },
-  won:         { label: 'Won',        color: 'var(--green)' },
-  lost:        { label: 'Lost',       color: 'var(--red)' },
+  'New lead':    { label: 'New lead',    color: 'var(--tx3)' },
+  'Qualified':   { label: 'Qualified',   color: 'var(--blue)' },
+  'Proposal':    { label: 'Proposal',    color: 'var(--amber)' },
+  'Negotiation': { label: 'Negotiation', color: 'var(--coral)' },
+  'Won':         { label: 'Won',         color: 'var(--green)' },
+  'Lost':        { label: 'Lost',        color: 'var(--red)' },
 };
 
 export default function P19ProspectProfile() {
@@ -41,12 +41,12 @@ export default function P19ProspectProfile() {
   if (isLoading) return <div className="page-loading"><LoadingSpinner size={24} /></div>;
   if (!prospect) return <div className="page"><div className="page-error">Prospect not found</div></div>;
 
-  const stageMeta = STAGE_META[prospect.stage] || STAGE_META.lead;
+  const stageMeta = STAGE_META[prospect.pipeline_stage] || STAGE_META['New lead'];
 
   const handleAddActivity = async () => {
     if (!newNote.trim()) return;
     try {
-      await createActivity.mutateAsync({ prospectId: id, type: actType, notes: newNote });
+      await createActivity.mutateAsync({ type: actType, notes: newNote });
       setNewNote('');
       showToast('Activity logged', 'success');
     } catch (err) { showToast(err.message, 'error'); }
@@ -54,7 +54,7 @@ export default function P19ProspectProfile() {
 
   const handleStageChange = async (stage) => {
     try {
-      await updateProspect.mutateAsync({ stage });
+      await updateProspect.mutateAsync({ pipeline_stage: stage });
       setEditingStage(false);
       showToast('Stage updated', 'success');
     } catch (err) { showToast(err.message, 'error'); }
@@ -78,8 +78,8 @@ export default function P19ProspectProfile() {
             <ArrowLeft size={14} />
           </button>
           <div>
-            <div className="page-title">{prospect.full_name}</div>
-            <div className="page-sub">{prospect.company_name || prospect.email}</div>
+            <div className="page-title">{prospect.contact_name}</div>
+            <div className="page-sub">{prospect.company_name || prospect.contact_email}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -132,7 +132,7 @@ export default function P19ProspectProfile() {
                           {new Date(a.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                         </span>
                       </div>
-                      {a.notes && <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.5 }}>{a.notes}</div>}
+                      {a.description && <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.5 }}>{a.description}</div>}
                     </div>
                   </div>
                 ))}
@@ -146,12 +146,12 @@ export default function P19ProspectProfile() {
           <div className="card" style={{ marginBottom: 12 }}>
             <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               Pipeline stage
-              <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setEditingStage(e => !e)}>Change</button>
+              <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setEditingStage(prev => !prev)}>Change</button>
             </div>
             {editingStage ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {STAGE_OPTIONS.map(s => (
-                  <button key={s} className={`btn ${prospect.stage === s ? 'btn-primary' : 'btn-ghost'}`} style={{ fontSize: 12, justifyContent: 'flex-start' }}
+                  <button key={s} className={`btn ${prospect.pipeline_stage === s ? 'btn-primary' : 'btn-ghost'}`} style={{ fontSize: 12, justifyContent: 'flex-start' }}
                     onClick={() => handleStageChange(s)}>
                     {STAGE_META[s].label}
                   </button>
@@ -168,12 +168,12 @@ export default function P19ProspectProfile() {
           <div className="card">
             <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 14 }}>Contact info</div>
             {[
-              ['Name', prospect.full_name],
+              ['Name', prospect.contact_name],
               ['Company', prospect.company_name],
-              ['Email', prospect.email],
-              ['Phone', prospect.phone],
-              ['Source', prospect.source],
-              ['Deal value', prospect.deal_value ? `£${prospect.deal_value.toLocaleString()}` : null],
+              ['Email', prospect.contact_email],
+              ['Phone', prospect.contact_phone],
+              ['Product interest', prospect.product_interest],
+              ['Est. value', prospect.estimated_value ? `£${prospect.estimated_value.toLocaleString()}` : null],
               ['Created', new Date(prospect.created_at).toLocaleDateString('en-GB')],
             ].filter(([, v]) => v).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, paddingBottom: 8, borderBottom: '1px solid var(--bdr)', marginBottom: 8 }}>

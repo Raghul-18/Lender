@@ -19,7 +19,10 @@ export default function P15CustomerDashboard() {
   const displayName = profile?.full_name?.split(' ')[0] || 'there';
   const activeContracts = contracts.filter(c => c.status === 'active');
   const overdueContracts = contracts.filter(c => c.status === 'overdue');
-  const totalOutstanding = activeContracts.reduce((sum, c) => sum + (c.monthly_payment * (c.payments_remaining || 0)), 0);
+  const totalOutstanding = activeContracts.reduce((sum, c) => {
+    const remaining = Math.max(0, (c.term_months || 0) - (c.payments_made || 0));
+    return sum + (c.monthly_payment || 0) * remaining;
+  }, 0);
 
   const kpis = [
     { label: 'Active agreements',   value: activeContracts.length,    icon: <FileText size={18} />,    color: 'var(--blue)' },

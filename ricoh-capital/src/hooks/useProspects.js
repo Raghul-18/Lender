@@ -119,7 +119,7 @@ export function useLogActivity() {
         .insert({
           prospect_id: prospectId,
           activity_type: activityType,
-          notes: description,
+          description,
           created_by: user.id,
         })
         .select()
@@ -134,7 +134,7 @@ export function useLogActivity() {
 }
 
 // Scoped activity creation — useCreateActivity(prospectId)
-// mutateAsync({ type, notes })
+// mutateAsync({ type, notes }) — `notes` is stored in `description` column
 export function useCreateActivity(prospectId) {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -144,7 +144,7 @@ export function useCreateActivity(prospectId) {
         .insert({
           prospect_id: prospectId,
           activity_type: type,
-          notes,
+          description: notes,
           created_by: user.id,
         })
         .select()

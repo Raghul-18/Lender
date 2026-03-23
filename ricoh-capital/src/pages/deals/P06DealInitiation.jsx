@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useDealStore } from '../../store/dealStore';
 import { dealInitiationSchema } from '../../schemas';
 import { FormField, LoadingSpinner } from '../../components/shared/FormField';
+import { useAuth } from '../../auth/AuthContext';
+import { Info } from 'lucide-react';
 
 const PRODUCT_TYPES = [
   'Asset Finance — Hire Purchase',
@@ -18,6 +20,7 @@ const PRODUCT_TYPES = [
 
 export default function P06DealInitiation() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { initiation, setInitiation } = useDealStore();
 
   const { register, handleSubmit, formState: { errors } } = useForm({
@@ -51,9 +54,19 @@ export default function P06DealInitiation() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
+        {profile?.company_name && (
+          <div className="info-banner blue" style={{ marginBottom: 16 }}>
+            <Info size={14} style={{ color: 'var(--blue)', flexShrink: 0, marginTop: 1 }} />
+            <div style={{ fontSize: 12 }}>
+              Submitting as <strong>{profile.company_name}</strong>. The customer details below are for the <em>end-client</em> being financed.
+            </div>
+          </div>
+        )}
+
         <div className="card" style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 16 }}>Customer information</div>
-          <FormField label="Customer / company name" required error={errors.customerName?.message}>
+          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 16 }}>End-client information</div>
+          <FormField label="Client / company name" required error={errors.customerName?.message}
+            hint="The company or individual being financed (your client, not your own company)">
             <input {...register('customerName')} className="form-input" placeholder="TechWorks Solutions Ltd" autoFocus />
           </FormField>
           <FormField label="Product type" required error={errors.productType?.message}>

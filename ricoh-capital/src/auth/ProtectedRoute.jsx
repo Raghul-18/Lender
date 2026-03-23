@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { useOnboardingStore } from '../store/onboardingStore';
 
 export function ProtectedRoute({ children, roles, requireApproved = false }) {
   const { user, profile, loading } = useAuth();
@@ -30,6 +31,7 @@ export function ProtectedRoute({ children, roles, requireApproved = false }) {
 
   return children;
 }
+
 
 // Redirect unauthenticated users to login, authenticated to their home
 export function PublicRoute({ children }) {
@@ -64,12 +66,20 @@ function getDefaultPath(profile) {
 
 function getOnboardingPath(status) {
   switch (status) {
-    case 'approved':         return '/onboarding/welcome';
-    case 'rejected':         return '/onboarding/verification';
-    case 'pending':          return '/onboarding/registration';
-    case 'submitted':        return '/onboarding/documents';
-    case 'under_review':     return '/onboarding/verification';
-    case 'info_requested':   return '/onboarding/documents';
-    default:                 return '/onboarding/registration';
+    case 'approved':       return '/onboarding/welcome';
+    case 'rejected':       return '/onboarding/verification';
+    case 'under_review':   return '/onboarding/verification';
+    case 'info_requested': return '/onboarding/documents';
+    case 'submitted':      return '/onboarding/verification';
+    case 'pending': {
+      // Resume to the furthest completed step using persisted Zustand state
+      const { registration, documents } = useOnboardingStore.getState();
+      const hasRegistration = !!(registration?.companyName && registration?.contactEmail);
+      const hasAnyDoc = Object.values(documents).some(d => d.status === 'uploaded');
+      if (hasAnyDoc)       return '/onboarding/documents';
+      if (hasRegistration) return '/onboarding/documents';
+      return '/onboarding/registration';
+    }
+    default:               return '/onboarding/registration';
   }
 }

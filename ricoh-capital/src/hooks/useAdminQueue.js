@@ -67,11 +67,11 @@ export function useReviewApplication() {
             ? `Your application was not approved. Reason: ${notes}`
             : 'Your application was not approved at this time. Please contact support for details.',
         },
-        on_hold: {
-          title: 'Application on hold',
+        info_requested: {
+          title: 'More information required',
           body: notes
-            ? `Your application has been placed on hold: ${notes}`
-            : 'Your application is on hold pending further review. Our team will be in touch.',
+            ? `We need additional information to proceed: ${notes}`
+            : 'We require additional information to proceed with your application. Our team will be in touch.',
         },
       };
       const notif = notifMap[status];
@@ -80,7 +80,7 @@ export function useReviewApplication() {
           user_id: data.user_id,
           title: notif.title,
           body: notif.body,
-          type: 'onboarding',
+          type: 'onboarding_update',
           related_id: id,
         });
       }

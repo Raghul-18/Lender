@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Info } from 'lucide-react';
+import { ArrowLeft, Send, Info, Check } from 'lucide-react';
 import { useDealStore } from '../../store/dealStore';
 import { useSubmitDeal } from '../../hooks/useDeals';
 import { useAppContext } from '../../context/AppContext';
+import { useAuth } from '../../auth/AuthContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
 
 export default function P08ReviewSubmit() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { initiation, assetDetails, getMonthlyPayment, getTotalPayable } = useDealStore();
   const submitDeal = useSubmitDeal();
   const { showToast } = useAppContext();
@@ -55,7 +57,7 @@ export default function P08ReviewSubmit() {
       <div className="steps-row" style={{ marginBottom: 24 }}>
         {['Initiation', 'Asset details', 'Review & submit'].map((s, i) => (
           <div key={s} className={`step ${i === 2 ? 'active' : 'done'}`}>
-            <div className="step-dot">{i < 2 ? '✓' : 3}</div>
+            <div className="step-dot">{i < 2 ? <Check size={12} /> : 3}</div>
             <div className="step-label">{s}</div>
           </div>
         ))}
@@ -63,8 +65,11 @@ export default function P08ReviewSubmit() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
         <div>
-          <Section title="Customer & deal" rows={[
-            ['Customer name', initiation.customerName],
+          <Section title="Submission details" rows={[
+            ['Submitted by', profile?.company_name || profile?.full_name || 'You'],
+          ]} />
+          <Section title="Client & deal" rows={[
+            ['Client name', initiation.customerName],
             ['Product type', initiation.productType],
             ['Your reference', initiation.originatorReference],
             ['Preferred start', initiation.preferredStartDate || 'Not specified'],

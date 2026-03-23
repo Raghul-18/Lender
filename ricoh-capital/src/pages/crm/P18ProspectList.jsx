@@ -5,15 +5,15 @@ import { useProspects } from '../../hooks/useProspects';
 import { LoadingSpinner } from '../../components/shared/FormField';
 
 const STAGE_META = {
-  lead:        { label: 'Lead',       color: 'var(--tx3)',    bg: 'var(--bg)' },
-  qualified:   { label: 'Qualified',  color: 'var(--blue)',   bg: 'var(--blue-l)' },
-  proposal:    { label: 'Proposal',   color: 'var(--amber)',  bg: 'var(--amber-l)' },
-  negotiation: { label: 'Negotiation',color: 'var(--coral)',  bg: 'var(--coral-l)' },
-  won:         { label: 'Won',        color: 'var(--green)',  bg: 'var(--green-l)' },
-  lost:        { label: 'Lost',       color: 'var(--red)',    bg: 'var(--red-l)' },
+  'New lead':    { label: 'New lead',    color: 'var(--tx3)',    bg: 'var(--bg)' },
+  'Qualified':   { label: 'Qualified',   color: 'var(--blue)',   bg: 'var(--blue-l)' },
+  'Proposal':    { label: 'Proposal',    color: 'var(--amber)',  bg: 'var(--amber-l)' },
+  'Negotiation': { label: 'Negotiation', color: 'var(--coral)',  bg: 'var(--coral-l)' },
+  'Won':         { label: 'Won',         color: 'var(--green)',  bg: 'var(--green-l)' },
+  'Lost':        { label: 'Lost',        color: 'var(--red)',    bg: 'var(--red-l)' },
 };
 
-const SUMMARY_STAGES = ['lead', 'qualified', 'proposal', 'won'];
+const SUMMARY_STAGES = ['New lead', 'Qualified', 'Proposal', 'Won'];
 
 export default function P18ProspectList() {
   const navigate = useNavigate();
@@ -22,10 +22,10 @@ export default function P18ProspectList() {
   const [stageFilter, setStageFilter] = useState('all');
 
   const filtered = prospects
-    .filter(p => stageFilter === 'all' || p.stage === stageFilter)
+    .filter(p => stageFilter === 'all' || p.pipeline_stage === stageFilter)
     .filter(p => {
       const q = search.toLowerCase();
-      return !q || p.full_name?.toLowerCase().includes(q) || p.company_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q);
+      return !q || p.contact_name?.toLowerCase().includes(q) || p.company_name?.toLowerCase().includes(q) || p.contact_email?.toLowerCase().includes(q);
     });
 
   return (
@@ -44,7 +44,7 @@ export default function P18ProspectList() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
         {SUMMARY_STAGES.map(s => {
           const meta = STAGE_META[s];
-          const count = prospects.filter(p => p.stage === s).length;
+          const count = prospects.filter(p => p.pipeline_stage === s).length;
           return (
             <div key={s} className="metric-card" style={{ cursor: 'pointer' }} onClick={() => setStageFilter(stageFilter === s ? 'all' : s)}>
               <div style={{ color: meta.color }}><Users size={16} /></div>
@@ -85,7 +85,7 @@ export default function P18ProspectList() {
       ) : (
         <div className="card" style={{ padding: 0 }}>
           {filtered.map((p, i) => {
-            const meta = STAGE_META[p.stage] || STAGE_META.lead;
+            const meta = STAGE_META[p.pipeline_stage] || STAGE_META['New lead'];
             return (
               <div key={p.id} style={{
                 padding: '14px 20px',
@@ -97,19 +97,19 @@ export default function P18ProspectList() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 13, fontWeight: 700, color: 'var(--coral)', flexShrink: 0,
                 }}>
-                  {p.full_name?.charAt(0)?.toUpperCase() || '?'}
+                  {p.contact_name?.charAt(0)?.toUpperCase() || '?'}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 3 }}>{p.full_name}</div>
+                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 3 }}>{p.contact_name}</div>
                   <div style={{ display: 'flex', gap: 14, fontSize: 11, color: 'var(--tx3)', flexWrap: 'wrap' }}>
                     {p.company_name && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Building2 size={10} />{p.company_name}</span>}
-                    {p.email && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={10} />{p.email}</span>}
-                    {p.phone && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={10} />{p.phone}</span>}
+                    {p.contact_email && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={10} />{p.contact_email}</span>}
+                    {p.contact_phone && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={10} />{p.contact_phone}</span>}
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {p.deal_value && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>£{p.deal_value.toLocaleString()}</span>
+                  {p.estimated_value && (
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>£{p.estimated_value.toLocaleString()}</span>
                   )}
                   <span style={{ fontSize: 11, fontWeight: 600, color: meta.color, background: meta.bg, borderRadius: 10, padding: '3px 8px' }}>{meta.label}</span>
                   <ChevronRight size={14} style={{ color: 'var(--tx4)' }} />
