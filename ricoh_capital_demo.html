@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ricoh Capital — Platform Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F4F0;--surface:#fff;--s2:#F0EEE9;--s3:#E8E5DE;
+  --bdr:#DDD9D1;--bdrm:#C9C4BA;--bdrs:#ABA69C;
+  --tx:#18170F;--tx2:#57544A;--tx3:#918D83;--tx4:#B8B4AB;
+  --coral:#BF4528;--coral-d:#9A3520;--coral-l:#FCF0EC;--coral-m:#F2C0AC;
+  --green:#2C7A4B;--green-l:#EAF5EE;--green-m:#A3D4B4;--green-d:#1E5C37;
+  --amber:#A86410;--amber-l:#FDF4E3;--amber-m:#F5D68A;
+  --blue:#1A5FA8;--blue-l:#EBF3FC;--blue-m:#A8C9ED;
+  --red:#C0372A;--red-l:#FCF0EE;--red-m:#F5B8B0;
+  --r:8px;--rl:12px;--rxl:16px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:13px;overflow:hidden}
+
+/* ── TOPNAV ── */
+.topnav{height:52px;background:var(--surface);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 20px;gap:12px;position:fixed;top:0;left:0;right:0;z-index:100}
+.logo{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer}
+.logo-mark{width:26px;height:26px;background:var(--coral);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.nav-sep{width:1px;height:20px;background:var(--bdr);flex-shrink:0}
+.nav-crumbs{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx3)}
+.nav-crumbs .sep{color:var(--bdrm)}
+.nav-crumbs .cur{color:var(--tx);font-weight:500}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.nav-mode-badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;border:1px solid}
+.nav-mode-badge.customer{background:var(--coral-l);color:var(--coral);border-color:var(--coral-m)}
+.nav-mode-badge.admin{background:#F0EAFF;color:#5C3FA0;border-color:#C5AEED}
+.nav-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:var(--coral-l);color:var(--coral);border:1px solid var(--coral-m);cursor:pointer}
+
+/* ── APP SHELL ── */
+.app-shell{display:flex;height:calc(100vh - 52px);margin-top:52px}
+
+/* ── LEFT NAV ── */
+.leftnav{width:200px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--bdr);overflow-y:auto;padding:12px 0}
+.leftnav::-webkit-scrollbar{width:3px}
+.leftnav::-webkit-scrollbar-thumb{background:var(--bdrm);border-radius:2px}
+.ln-section{margin-bottom:4px}
+.ln-section-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tx4);padding:10px 16px 4px}
+.ln-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;transition:background .12s;border-radius:0;font-size:12px;color:var(--tx2);position:relative}
+.ln-item:hover{background:var(--s2)}
+.ln-item.active{background:var(--coral-l);color:var(--coral);font-weight:600}
+.ln-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--coral);border-radius:0 2px 2px 0}
+.ln-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.ln-badge{margin-left:auto;font-size:9px;font-weight:700;background:var(--coral);color:#fff;padding:1px 5px;border-radius:8px}
+.ln-divider{height:1px;background:var(--bdr);margin:6px 12px}
+
+/* ── CONTENT AREA ── */
+.content-area{flex:1;overflow-y:auto;background:var(--bg)}
+.content-area::-webkit-scrollbar{width:5px}
+.content-area::-webkit-scrollbar-thumb{background:var(--bdrm);border-radius:3px}
+
+/* ── PAGE WRAPPER ── */
+.page{display:none;padding:28px 32px 64px;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SHARED COMPONENTS ── */
+.page-header{margin-bottom:24px}
+.ph-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;padding:3px 10px;border-radius:20px;border:1px solid;margin-bottom:10px}
+.ph-badge.coral{background:var(--coral-l);color:var(--coral);border-color:var(--coral-m)}
+.ph-badge.blue{background:var(--blue-l);color:var(--blue);border-color:var(--blue-m)}
+.ph-badge.green{background:var(--green-l);color:var(--green-d);border-color:var(--green-m)}
+.ph-badge.amber{background:var(--amber-l);color:var(--amber);border-color:var(--amber-m)}
+.ph-title{font-size:20px;font-weight:600;letter-spacing:-.4px;margin-bottom:4px}
+.ph-sub{font-size:12px;color:var(--tx3)}
+
+.card{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--rxl);padding:20px 24px;margin-bottom:14px}
+.card-title{font-size:13px;font-weight:600;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--bdr)}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+.metric-card{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px;cursor:pointer;transition:box-shadow .15s}
+.metric-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.mc-val{font-size:24px;font-weight:600;font-family:'DM Mono',monospace;letter-spacing:-1px;margin-bottom:4px}
+.mc-lbl{font-size:11px;color:var(--tx3)}
+.mc-delta{font-size:10px;font-weight:500;margin-top:4px}
+.mc-delta.up{color:var(--green)}
+.mc-delta.dn{color:var(--red)}
+
+.form-field{margin-bottom:14px}
+.field-label{font-size:11px;font-weight:500;color:var(--tx2);margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.req{color:var(--coral)}
+.form-input{width:100%;height:36px;padding:0 11px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx);background:var(--surface);border:1px solid var(--bdrm);border-radius:var(--r);outline:none;transition:border-color .15s}
+.form-input:focus{border-color:var(--coral);box-shadow:0 0 0 3px rgba(191,69,40,.08)}
+.form-select{width:100%;height:36px;padding:0 30px 0 11px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23918D83'/%3E%3C/svg%3E") no-repeat right 10px center;border:1px solid var(--bdrm);border-radius:var(--r);outline:none;appearance:none;cursor:pointer}
+.form-select:focus{border-color:var(--coral)}
+.form-textarea{width:100%;padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx);background:var(--surface);border:1px solid var(--bdrm);border-radius:var(--r);outline:none;resize:vertical;min-height:72px}
+.form-textarea:focus{border-color:var(--coral)}
+
+.btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:8px 18px;border-radius:var(--r);border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--coral);color:#fff}.btn-primary:hover{background:var(--coral-d)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{opacity:.88}
+.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bdrm)}.btn-ghost:hover{background:var(--s2)}
+.btn-danger{background:var(--red-l);color:var(--red);border:1px solid var(--red-m)}.btn-danger:hover{background:var(--red);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{opacity:.88}
+.btn-sm{padding:5px 12px;font-size:11px}
+
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;border:1px solid}
+.tag.coral{background:var(--coral-l);color:var(--coral);border-color:var(--coral-m)}
+.tag.blue{background:var(--blue-l);color:var(--blue);border-color:var(--blue-m)}
+.tag.green{background:var(--green-l);color:var(--green-d);border-color:var(--green-m)}
+.tag.amber{background:var(--amber-l);color:var(--amber);border-color:var(--amber-m)}
+.tag.red{background:var(--red-l);color:var(--red);border-color:var(--red-m)}
+.tag.gray{background:var(--s2);color:var(--tx3);border-color:var(--bdrm)}
+
+.table{width:100%;border-collapse:collapse}
+.table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--tx4);padding:8px 12px;border-bottom:1px solid var(--bdr);text-align:left;background:var(--s2)}
+.table td{padding:11px 12px;border-bottom:1px solid var(--bdr);font-size:12px;color:var(--tx2)}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:var(--s2);cursor:pointer}
+
+.info-banner{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-radius:var(--rl);border:1px solid;margin-bottom:16px}
+.info-banner.blue{background:var(--blue-l);border-color:var(--blue-m)}
+.info-banner.amber{background:var(--amber-l);border-color:var(--amber-m)}
+.info-banner.green{background:var(--green-l);border-color:var(--green-m)}
+.info-banner.red{background:var(--red-l);border-color:var(--red-m)}
+
+.steps-row{display:flex;align-items:flex-start;gap:0;margin-bottom:28px}
+.step-node{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+.step-node:not(:last-child)::after{content:'';position:absolute;top:15px;left:50%;width:100%;height:2px;background:var(--bdr);z-index:0}
+.step-node.done:not(:last-child)::after{background:var(--green-m)}
+.step-node.active:not(:last-child)::after{background:linear-gradient(to right,var(--green-m) 30%,var(--bdr) 30%)}
+.step-circ{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;z-index:1;position:relative;border:2px solid}
+.step-circ.done{background:var(--green);border-color:var(--green);color:#fff}
+.step-circ.active{background:var(--coral);border-color:var(--coral);color:#fff}
+.step-circ.wait{background:var(--surface);border-color:var(--bdrm);color:var(--tx4)}
+.step-lbl{font-size:10px;font-weight:500;color:var(--tx3);margin-top:6px;text-align:center}
+.step-lbl.active{color:var(--coral);font-weight:600}
+.step-lbl.done{color:var(--green-d)}
+
+/* upload zone */
+.dropzone{border:2px dashed var(--bdrm);border-radius:var(--rl);padding:24px;text-align:center;cursor:pointer;background:var(--s2);transition:all .18s}
+.dropzone:hover{border-color:var(--coral);background:var(--coral-l)}
+.dz-icon{font-size:24px;margin-bottom:8px}
+.dz-title{font-size:12px;font-weight:600;margin-bottom:3px}
+.dz-sub{font-size:11px;color:var(--tx3)}
+
+/* live calc */
+.calc-box{background:var(--blue-l);border:1px solid var(--blue-m);border-radius:var(--rl);padding:16px;margin-bottom:14px}
+.cb-lbl{font-size:10px;color:var(--blue);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.cb-val{font-size:28px;font-weight:600;font-family:'DM Mono',monospace;color:var(--blue);letter-spacing:-1px}
+.cb-sub{font-size:11px;color:var(--tx3);margin-top:4px}
+
+/* status dot */
+.sdot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.sdot.green{background:var(--green)}
+.sdot.coral{background:var(--coral);animation:blink 1.2s ease-in-out infinite}
+.sdot.amber{background:var(--amber)}
+.sdot.red{background:var(--red)}
+.sdot.gray{background:var(--bdrs)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* progress bar */
+.prog-track{height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .4s ease}
+
+/* product card */
+.prod-card{border:1px solid var(--bdr);border-radius:var(--rl);padding:14px;cursor:pointer;transition:all .15s}
+.prod-card:hover{border-color:var(--bdrm);background:var(--s2)}
+.prod-card.sel{border-color:var(--coral);background:var(--coral-l)}
+
+/* check-row */
+.check-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .1s}
+.check-row:hover{background:var(--s2)}
+.check-row:last-child{border-bottom:none}
+.cr-ic{width:34px;height:34px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+
+/* audit timeline */
+.tl-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--bdr)}
+.tl-item:last-child{border-bottom:none}
+.tl-dot-col{width:14px;flex-shrink:0;display:flex;justify-content:center;padding-top:3px}
+.tl-dot{width:8px;height:8px;border-radius:50%}
+.tl-action{font-size:12px;color:var(--tx);line-height:1.4}
+.tl-time{font-size:10px;color:var(--tx4);font-family:'DM Mono',monospace;margin-top:2px}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-bg.show{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:var(--rxl);padding:28px;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.18);transform:translateY(10px);transition:transform .2s}
+.modal-bg.show .modal{transform:translateY(0)}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:8px}
+.modal-desc{font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:20px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--tx);color:#fff;font-size:12px;font-weight:500;padding:9px 20px;border-radius:var(--r);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* confetti */
+.conf-wrap{position:fixed;inset:0;pointer-events:none;z-index:300;overflow:hidden}
+.conf{position:absolute;border-radius:2px;animation:cfal linear forwards}
+@keyframes cfal{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* hero */
+.hero-green{background:linear-gradient(135deg,#1E3A2F 0%,#2C7A4B 100%);padding:40px 32px;border-radius:var(--rxl);margin-bottom:20px;color:#fff;position:relative;overflow:hidden}
+.hero-green::before{content:'';position:absolute;top:-40px;right:-60px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+
+/* portfolio dashboard */
+.portfolio-table-wrap{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--rxl);overflow:hidden}
+
+/* quote builder */
+.scenario-tab{padding:7px 14px;font-size:11px;font-weight:500;border-radius:var(--r);cursor:pointer;border:1px solid var(--bdr);background:transparent;color:var(--tx3);margin-right:6px}
+.scenario-tab.active{background:var(--blue-l);color:var(--blue);border-color:var(--blue-m)}
+
+/* risk bar */
+.risk-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.risk-lbl{font-size:11px;color:var(--tx2);flex:1}
+.risk-track{width:80px;height:4px;background:var(--s3);border-radius:2px;overflow:hidden;flex-shrink:0}
+.risk-fill{height:100%;border-radius:2px}
+.risk-num{font-size:10px;font-family:'DM Mono',monospace;color:var(--tx3);width:24px;text-align:right}
+
+/* 3-col layout for admin */
+.three-col{display:flex;height:calc(100vh - 52px - 56px);gap:0}
+.q-col{width:340px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--bdr);overflow-y:auto}
+.d-col{flex:1;overflow-y:auto;background:var(--bg)}
+.a-col{width:240px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--bdr);overflow-y:auto}
+
+.q-item{padding:14px 16px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .1s}
+.q-item:hover{background:var(--s2)}
+.q-item.sel{background:var(--coral-l);border-right:3px solid var(--coral)}
+
+/* notification item */
+.notif-item{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .1s}
+.notif-item:hover{background:var(--s2)}
+.notif-item.unread{background:var(--coral-l)}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--coral);flex-shrink:0;margin-top:4px}
+.notif-dot.read{background:transparent;border:1.5px solid var(--bdrm)}
+</style>
+</head>
+<body>
+
+<!-- CONFETTI -->
+<div class="conf-wrap" id="confWrap"></div>
+
+<!-- ── TOPNAV ── -->
+<nav class="topnav">
+  <div class="logo" onclick="nav('p10')">
+    <div class="logo-mark">RC</div>Ricoh Capital
+  </div>
+  <div class="nav-sep"></div>
+  <div class="nav-crumbs" id="navCrumbs">
+    <span class="cur">Dashboard</span>
+  </div>
+  <div class="nav-r">
+    <span class="nav-mode-badge customer" id="modeBadge">Originator Portal</span>
+    <div class="nav-avatar" title="James Davies" onclick="showToast('Account: James Davies — Acme Finance Ltd')">JD</div>
+  </div>
+</nav>
+
+<!-- ── APP SHELL ── -->
+<div class="app-shell">
+
+<!-- LEFT NAV -->
+<nav class="leftnav" id="leftnav">
+  <div class="ln-section">
+    <div class="ln-section-lbl">Onboarding</div>
+    <div class="ln-item" data-page="p01" onclick="nav('p01')"><span class="ln-icon"></span>Registration</div>
+    <div class="ln-item" data-page="p02" onclick="nav('p02')"><span class="ln-icon"></span>Document Upload</div>
+    <div class="ln-item" data-page="p03" onclick="nav('p03')"><span class="ln-icon"></span>Verification</div>
+    <div class="ln-item" data-page="p04" onclick="nav('p04')"><span class="ln-icon"></span>Admin Review<span class="ln-badge">3</span></div>
+    <div class="ln-item" data-page="p05" onclick="nav('p05')"><span class="ln-icon"></span>Activation</div>
+  </div>
+  <div class="ln-divider"></div>
+  <div class="ln-section">
+    <div class="ln-section-lbl">Customer Experience</div>
+    <div class="ln-item" data-page="p06" onclick="nav('p06')"><span class="ln-icon"></span>New Deal</div>
+    <div class="ln-item" data-page="p07" onclick="nav('p07')"><span class="ln-icon"></span>Asset Details</div>
+    <div class="ln-item" data-page="p08" onclick="nav('p08')"><span class="ln-icon"></span>Review &amp; Submit</div>
+    <div class="ln-item" data-page="p09" onclick="nav('p09')"><span class="ln-icon"></span>Confirmation</div>
+    <div class="ln-divider"></div>
+    <div class="ln-item" data-page="p10" onclick="nav('p10')"><span class="ln-icon"></span>Portfolio</div>
+    <div class="ln-item" data-page="p11" onclick="nav('p11')"><span class="ln-icon"></span>View Config</div>
+    <div class="ln-item" data-page="p12" onclick="nav('p12')"><span class="ln-icon"></span>Asset Detail</div>
+    <div class="ln-item" data-page="p13" onclick="nav('p13')"><span class="ln-icon"></span>Export</div>
+    <div class="ln-divider"></div>
+    <div class="ln-item" data-page="p14" onclick="nav('p14')"><span class="ln-icon"></span>Self-Service Login</div>
+    <div class="ln-item" data-page="p15" onclick="nav('p15')"><span class="ln-icon"></span>My Dashboard</div>
+    <div class="ln-item" data-page="p16" onclick="nav('p16')"><span class="ln-icon"></span>Account Actions</div>
+    <div class="ln-item" data-page="p17" onclick="nav('p17')"><span class="ln-icon"></span>Notifications<span class="ln-badge">5</span></div>
+  </div>
+  <div class="ln-divider"></div>
+  <div class="ln-section">
+    <div class="ln-section-lbl">Lead &amp; Opp. Mgmt</div>
+    <div class="ln-item" data-page="p18" onclick="nav('p18')"><span class="ln-icon"></span>Prospects</div>
+    <div class="ln-item" data-page="p19" onclick="nav('p19')"><span class="ln-icon"></span>Prospect Profile</div>
+    <div class="ln-item" data-page="p20" onclick="nav('p20')"><span class="ln-icon"></span>Qualify / Convert</div>
+    <div class="ln-item" data-page="p21" onclick="nav('p21')"><span class="ln-icon"></span>Quote Builder</div>
+    <div class="ln-item" data-page="p22" onclick="nav('p22')"><span class="ln-icon"></span>Quote Output</div>
+  </div>
+  <div class="ln-divider"></div>
+  <div class="ln-section">
+    <div class="ln-section-lbl">Shared Patterns</div>
+    <div class="ln-item" data-page="s01" onclick="nav('s01')"><span class="ln-icon"></span>Global Nav</div>
+    <div class="ln-item" data-page="s02" onclick="nav('s02')"><span class="ln-icon"></span>Error States</div>
+    <div class="ln-item" data-page="s03" onclick="nav('s03')"><span class="ln-icon"></span>Toasts &amp; Alerts</div>
+  </div>
+</nav>
+
+<!-- CONTENT AREA -->
+<div class="content-area" id="contentArea">
+
+<!-- ═══════════════════════════════════════ P01 REGISTRATION ═══ -->
+<div class="page" id="p01">
+  <div class="page-header">
+    <div class="ph-badge coral">Step 1 of 5</div>
+    <div class="ph-title">Company Registration</div>
+    <div class="ph-sub">Tell us about your organisation to begin the originator onboarding process.</div>
+  </div>
+  <div class="steps-row">
+    <div class="step-node active"><div class="step-circ active">1</div><div class="step-lbl active">Registration</div></div>
+    <div class="step-node"><div class="step-circ wait">2</div><div class="step-lbl">Documents</div></div>
+    <div class="step-node"><div class="step-circ wait">3</div><div class="step-lbl">Verification</div></div>
+    <div class="step-node"><div class="step-circ wait">4</div><div class="step-lbl">Review</div></div>
+    <div class="step-node"><div class="step-circ wait">5</div><div class="step-lbl">Activation</div></div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">🏢 Company Information</div>
+        <div class="form-field"><div class="field-label">Registered company name <span class="req">*</span></div><input class="form-input" value="Acme Finance Ltd"></div>
+        <div class="grid-2">
+          <div class="form-field"><div class="field-label">Companies House no. <span class="req">*</span></div><input class="form-input" value="12345678"></div>
+          <div class="form-field"><div class="field-label">Company type <span class="req">*</span></div>
+          <select class="form-select"><option>Limited company (Ltd)</option><option>PLC</option><option>LLP</option></select></div>
+        </div>
+        <div class="form-field"><div class="field-label">Registered address <span class="req">*</span></div><input class="form-input" value="14 Commerce Park, Manchester, M1 4AB"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👤 Primary Contact</div>
+        <div class="grid-2">
+          <div class="form-field"><div class="field-label">First name <span class="req">*</span></div><input class="form-input" value="James"></div>
+          <div class="form-field"><div class="field-label">Last name <span class="req">*</span></div><input class="form-input" value="Davies"></div>
+        </div>
+        <div class="form-field"><div class="field-label">Work email <span class="req">*</span></div><input class="form-input" type="email" value="james@acmefinance.co.uk"></div>
+        <div class="form-field"><div class="field-label">Job title</div>
+        <select class="form-select"><option>Managing Director</option><option>Director</option><option>Finance Manager</option></select></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📦 Product Lines</div>
+        <div class="grid-3" style="margin-bottom:14px">
+          <div class="prod-card sel" onclick="this.classList.toggle('sel')"><div style="font-size:18px;margin-bottom:6px">🚗</div><div style="font-size:11px;font-weight:600">Asset finance</div></div>
+          <div class="prod-card" onclick="this.classList.toggle('sel')"><div style="font-size:18px;margin-bottom:6px">🏗️</div><div style="font-size:11px;font-weight:600">Equipment leasing</div></div>
+          <div class="prod-card sel" onclick="this.classList.toggle('sel')"><div style="font-size:18px;margin-bottom:6px">🏢</div><div style="font-size:11px;font-weight:600">Comm. mortgage</div></div>
+          <div class="prod-card" onclick="this.classList.toggle('sel')"><div style="font-size:18px;margin-bottom:6px">📋</div><div style="font-size:11px;font-weight:600">Invoice finance</div></div>
+          <div class="prod-card" onclick="this.classList.toggle('sel')"><div style="font-size:18px;margin-bottom:6px">💳</div><div style="font-size:11px;font-weight:600">Business loans</div></div>
+          <div class="prod-card" onclick="this.classList.toggle('sel')"><div style="font-size:18px;margin-bottom:6px">🔄</div><div style="font-size:11px;font-weight:600">Refinance</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost">Save draft</button>
+        <button class="btn btn-primary" onclick="nav('p02')">Save &amp; continue →</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="background:var(--s2);border-style:dashed">
+        <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Registration guide</div>
+        <div style="font-size:11px;color:var(--tx2);line-height:1.7">
+          <p style="margin-bottom:8px">✓ Use your exact legal name as registered with Companies House</p>
+          <p style="margin-bottom:8px">✓ Your Companies House number is 8 digits, found on your incorporation certificate</p>
+          <p style="margin-bottom:8px">✓ Select all product lines you intend to originate — you can update these later</p>
+          <p>✓ All data is encrypted and used solely for compliance purposes</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P02 DOCUMENT UPLOAD ═══ -->
+<div class="page" id="p02">
+  <div class="page-header">
+    <div class="ph-badge coral">Step 2 of 5</div>
+    <div class="ph-title">Document Upload</div>
+    <div class="ph-sub">Upload your KYC and compliance documents. All files are encrypted in transit.</div>
+  </div>
+  <div class="steps-row">
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Registration</div></div>
+    <div class="step-node active"><div class="step-circ active">2</div><div class="step-lbl active">Documents</div></div>
+    <div class="step-node"><div class="step-circ wait">3</div><div class="step-lbl">Verification</div></div>
+    <div class="step-node"><div class="step-circ wait">4</div><div class="step-lbl">Review</div></div>
+    <div class="step-node"><div class="step-circ wait">5</div><div class="step-lbl">Activation</div></div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <!-- Doc cards -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;font-weight:600">Required documents</span><div style="display:flex;gap:6px"><span class="tag green">2 uploaded</span><span class="tag red">1 failed</span><span class="tag gray">2 pending</span></div></div>
+        <!-- cert -->
+        <div class="check-row" style="border-left:3px solid var(--green)">
+          <div class="cr-ic" style="background:var(--green-l)">📄</div>
+          <div style="flex:1"><div style="font-size:12px;font-weight:500">Certificate of Incorporation</div><div style="font-size:10px;color:var(--tx3)">certificate_of_incorporation.pdf · 842 KB</div></div>
+          <span class="tag green"><span class="sdot green" style="margin-right:3px"></span>Uploaded</span>
+        </div>
+        <!-- address -->
+        <div class="check-row" style="border-left:3px solid var(--green)">
+          <div class="cr-ic" style="background:var(--green-l)">🏠</div>
+          <div style="flex:1"><div style="font-size:12px;font-weight:500">Proof of Business Address</div><div style="font-size:10px;color:var(--tx3)">utility_bill_jan2025.pdf · 1.2 MB</div></div>
+          <span class="tag green"><span class="sdot green" style="margin-right:3px"></span>Uploaded</span>
+        </div>
+        <!-- bank -->
+        <div class="check-row" style="border-left:3px solid var(--coral)">
+          <div class="cr-ic" style="background:var(--amber-l)">🏦</div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:500">Business Bank Statements</div>
+            <div style="font-size:10px;color:var(--tx3)">bank_statements_q4_2024.pdf · uploading 68%</div>
+            <div class="prog-track" style="margin-top:5px"><div class="prog-fill" style="width:68%;background:var(--coral)"></div></div>
+          </div>
+          <span class="tag coral"><span class="sdot coral" style="margin-right:3px"></span>Uploading</span>
+        </div>
+        <!-- ID fail -->
+        <div class="check-row" style="border-left:3px solid var(--red);background:var(--red-l)">
+          <div class="cr-ic" style="background:var(--red-l)">🪪</div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:500">Director Photo ID</div>
+            <div style="font-size:10px;color:var(--red)">Failed — image too small / wrong format</div>
+          </div>
+          <span class="tag red">Failed</span>
+        </div>
+        <!-- aml -->
+        <div class="check-row" style="border-left:3px solid var(--bdrm)">
+          <div class="cr-ic" style="background:var(--s2)">📋</div>
+          <div style="flex:1"><div style="font-size:12px;font-weight:500">AML / KYC Policy</div><div style="font-size:10px;color:var(--tx3)">Not yet uploaded</div></div>
+          <span class="tag gray">Pending</span>
+        </div>
+        <!-- PI -->
+        <div class="check-row" style="border-left:3px solid var(--bdrm)">
+          <div class="cr-ic" style="background:var(--s2)">🛡️</div>
+          <div style="flex:1"><div style="font-size:12px;font-weight:500">PI Insurance Certificate</div><div style="font-size:10px;color:var(--tx3)">Not yet uploaded</div></div>
+          <span class="tag gray">Pending</span>
+        </div>
+      </div>
+      <div class="dropzone" onclick="showToast('File picker opened — drop files here or browse')">
+        <div class="dz-icon">📎</div>
+        <div class="dz-title">Drag &amp; drop files here</div>
+        <div class="dz-sub">PDF, JPG, PNG, DOCX up to 20 MB · or <span style="color:var(--coral);font-weight:500">browse files</span></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+        <button class="btn btn-ghost" onclick="nav('p01')">← Back</button>
+        <button class="btn btn-primary" style="opacity:.4;cursor:not-allowed">Submit for review →</button>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Document checklist</div>
+        <div style="font-size:11px;color:var(--tx2);line-height:1.8">
+          <div>✅ Certificate of Incorporation</div>
+          <div>✅ Proof of Business Address</div>
+          <div style="color:var(--coral)">⬆ Bank Statements (uploading)</div>
+          <div style="color:var(--red)">⚠ Director Photo ID (failed)</div>
+          <div style="color:var(--tx4)">○ AML / KYC Policy</div>
+          <div style="color:var(--tx4)">○ PI Insurance</div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:10px">File requirements</div>
+        <div class="grid-2" style="gap:8px">
+          <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:10px;text-align:center"><div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace">20 MB</div><div style="font-size:10px;color:var(--tx3)">Max per file</div></div>
+          <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:10px;text-align:center"><div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace">3 mo</div><div style="font-size:10px;color:var(--tx3)">Max doc age</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P03 VERIFICATION ═══ -->
+<div class="page" id="p03">
+  <div class="page-header">
+    <div class="ph-badge coral">Step 3 of 5</div>
+    <div class="ph-title">Verification Status</div>
+    <div class="ph-sub">Automated compliance checks are running. We'll notify you when each check completes.</div>
+  </div>
+  <div class="steps-row">
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Registration</div></div>
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Documents</div></div>
+    <div class="step-node active"><div class="step-circ active" style="font-size:10px">●</div><div class="step-lbl active">Verification</div></div>
+    <div class="step-node"><div class="step-circ wait">4</div><div class="step-lbl">Review</div></div>
+    <div class="step-node"><div class="step-circ wait">5</div><div class="step-lbl">Activation</div></div>
+  </div>
+  <div class="info-banner amber"><span style="font-size:16px">⚙️</span><div><strong style="color:var(--amber)">4 of 7 checks complete</strong><br><span style="font-size:11px;color:var(--tx2)">One check requires action — Director ID failed. Please resubmit a clearer scan.</span></div></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--bdr)"><span style="font-size:13px;font-weight:600">Individual check results</span></div>
+    <div class="check-row"><div class="cr-ic" style="background:var(--green-l)">🏢</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Companies House verification</div><div style="font-size:10px;color:var(--tx3)">Company confirmed active · Reg. 12345678</div></div><span class="tag green"><span class="sdot green" style="margin-right:3px"></span>Passed</span></div>
+    <div class="check-row"><div class="cr-ic" style="background:var(--green-l)">🔍</div><div style="flex:1"><div style="font-size:12px;font-weight:500">AML / Sanctions screening</div><div style="font-size:10px;color:var(--tx3)">No matches on global watchlists</div></div><span class="tag green"><span class="sdot green" style="margin-right:3px"></span>Passed</span></div>
+    <div class="check-row"><div class="cr-ic" style="background:var(--green-l)">📄</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Document authenticity</div><div style="font-size:10px;color:var(--tx3)">Cert &amp; address proof verified</div></div><span class="tag green"><span class="sdot green" style="margin-right:3px"></span>Passed</span></div>
+    <div class="check-row"><div class="cr-ic" style="background:var(--green-l)">🏦</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Bank statement analysis</div><div style="font-size:10px;color:var(--tx3)">Avg. monthly credit: £142,400</div></div><span class="tag green"><span class="sdot green" style="margin-right:3px"></span>Passed</span></div>
+    <div class="check-row" style="background:var(--red-l)"><div class="cr-ic" style="background:var(--red-l)">🪪</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Director identity verification</div><div style="font-size:10px;color:var(--red)">Image quality too low — MRZ could not be parsed. Please resubmit.</div></div><div style="display:flex;gap:8px;align-items:center"><span class="tag red">Failed</span><button class="btn btn-sm btn-danger" onclick="nav('p02');showToast('Returning to upload — Director ID section')">Resubmit</button></div></div>
+    <div class="check-row"><div class="cr-ic" style="background:var(--coral-l)">📋</div><div style="flex:1"><div style="font-size:12px;font-weight:500">AML policy document review</div><div style="font-size:10px;color:var(--coral)">Extracting key clauses…</div><div class="prog-track" style="margin-top:5px"><div class="prog-fill" style="width:45%;background:var(--coral);animation:prog 2s ease-in-out infinite alternate"></div></div></div><span class="tag coral"><span class="sdot coral" style="margin-right:3px"></span>Running</span></div>
+    <div class="check-row"><div class="cr-ic" style="background:var(--s2)">🛡️</div><div style="flex:1"><div style="font-size:12px;font-weight:500">PI insurance validation</div><div style="font-size:10px;color:var(--tx3)">Queued — starts after AML review</div></div><span class="tag gray">Queued</span></div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+    <button class="btn btn-ghost" onclick="nav('p02')">← Back to documents</button>
+  </div>
+</div>
+<style>@keyframes prog{from{width:20%}to{width:80%}}</style>
+
+<!-- ═══════════════════════════════════════ P04 ADMIN REVIEW ═══ -->
+<div class="page" id="p04" style="padding:0">
+  <div style="padding:16px 24px;border-bottom:1px solid var(--bdr);background:var(--surface);display:flex;align-items:center;gap:12px">
+    <div class="ph-title" style="font-size:16px;margin:0">Admin Review Queue</div>
+    <span class="tag" style="background:#F0EAFF;color:#5C3FA0;border-color:#C5AEED">Admin portal</span>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Filter applied')">Filter ▾</button>
+      <button class="btn btn-sm" style="background:var(--s2);color:var(--tx2);border:1px solid var(--bdrm)">Sort ▾</button>
+    </div>
+  </div>
+  <div class="three-col" style="height:calc(100vh - 52px - 57px)">
+    <!-- Queue -->
+    <div class="q-col">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--bdr);font-size:11px;color:var(--tx3)">14 pending · 3 require action</div>
+      <div class="q-item sel">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div style="width:26px;height:26px;border-radius:50%;background:#FDE8D0;color:#C06010;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">AF</div>
+          <div style="font-size:12px;font-weight:600">James Davies</div>
+          <div style="margin-left:auto;font-size:10px;color:var(--tx4)">2h ago</div>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Acme Finance Ltd · Manchester</div>
+        <div style="display:flex;gap:5px"><span class="tag coral">New</span><span class="tag amber">4/7 checks</span><span class="tag gray">Asset finance</span></div>
+      </div>
+      <div class="q-item" onclick="showToast('Loading Meridian Capital…')">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">MC</div>
+          <div style="font-size:12px;font-weight:600">Rebecca Lawson</div>
+          <div style="margin-left:auto;font-size:10px;color:var(--tx4)">5h ago</div>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Meridian Capital · London</div>
+        <div style="display:flex;gap:5px"><span class="tag blue">Info requested</span><span class="tag green">7/7</span></div>
+      </div>
+      <div class="q-item" onclick="showToast('Loading Pinnacle Brokers…')">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div style="width:26px;height:26px;border-radius:50%;background:#F3EEFF;color:#5C3FA0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">PB</div>
+          <div style="font-size:12px;font-weight:600">Daniel Wright</div>
+          <div style="margin-left:auto;font-size:10px;color:var(--tx4)">Yesterday</div>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Pinnacle Brokers · Birmingham</div>
+        <div style="display:flex;gap:5px"><span class="tag coral">New</span><span class="tag green">7/7</span></div>
+      </div>
+      <div class="q-item" onclick="showToast('Loading Atlas Funding…')">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--amber-l);color:var(--amber);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">AT</div>
+          <div style="font-size:12px;font-weight:600">Priya Sharma</div>
+          <div style="margin-left:auto;font-size:10px;color:var(--tx4)">Yesterday</div>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">Atlas Funding · Leeds</div>
+        <div style="display:flex;gap:5px"><span class="tag coral">New</span><span class="tag amber">5/7</span></div>
+      </div>
+    </div>
+    <!-- Detail -->
+    <div class="d-col" style="padding:20px 24px">
+      <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:20px">
+        <div style="width:44px;height:44px;border-radius:var(--rl);background:#FDE8D0;color:#C06010;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">AF</div>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:600;margin-bottom:3px">James Davies — Acme Finance Ltd</div>
+          <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Manchester · Submitted today 09:14 · Ref OB-2025-0421</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag amber">⏱ SLA: 6h left</span><span class="tag blue">Asset finance · Comm. mortgage</span><span class="tag red">1 check failed</span></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-green btn-sm" onclick="openModal('approve')">✓ Approve</button>
+          <button class="btn btn-sm btn-danger" onclick="openModal('reject')">✕ Reject</button>
+          <button class="btn btn-ghost btn-sm" onclick="openModal('info')">✉ Request info</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Risk score: <span style="color:var(--amber)">64/100 — Medium</span></div>
+        <div class="risk-row"><div class="risk-lbl">Identity verification</div><div class="risk-track"><div class="risk-fill" style="width:20%;background:var(--red)"></div></div><div class="risk-num" style="color:var(--red)">20</div></div>
+        <div class="risk-row"><div class="risk-lbl">AML / sanctions</div><div class="risk-track"><div class="risk-fill" style="width:100%;background:var(--green)"></div></div><div class="risk-num" style="color:var(--green)">100</div></div>
+        <div class="risk-row"><div class="risk-lbl">Co. House match</div><div class="risk-track"><div class="risk-fill" style="width:100%;background:var(--green)"></div></div><div class="risk-num" style="color:var(--green)">100</div></div>
+        <div class="risk-row"><div class="risk-lbl">Financial health</div><div class="risk-track"><div class="risk-fill" style="width:72%;background:var(--amber)"></div></div><div class="risk-num" style="color:var(--amber)">72</div></div>
+        <div class="risk-row"><div class="risk-lbl">Document completeness</div><div class="risk-track"><div class="risk-fill" style="width:85%;background:var(--green)"></div></div><div class="risk-num" style="color:var(--green)">85</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Audit trail</div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--blue)"></div></div><div><div class="tl-action"><strong>Sarah P.</strong> added internal note</div><div class="tl-time">Today, 11:22</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--red)"></div></div><div><div class="tl-action">System: Director ID check <strong>failed</strong></div><div class="tl-time">Today, 10:58</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--green)"></div></div><div><div class="tl-action">System: Bank statement analysis passed</div><div class="tl-time">Today, 10:44</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--bdrs)"></div></div><div><div class="tl-action">James Davies submitted 6 documents</div><div class="tl-time">Today, 09:14</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Internal note</div>
+        <textarea class="form-textarea" style="margin-bottom:10px">Director ID resubmission pending. All other checks satisfactory. Recommend conditional approval.</textarea>
+        <button class="btn btn-ghost btn-sm" onclick="showToast('Note saved')">Save note</button>
+      </div>
+    </div>
+    <!-- Annotation -->
+    <!-- <div class="a-col" style="padding:16px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--tx4);margin-bottom:10px">Annotations</div>
+      <div style="font-size:11px;color:var(--tx2);line-height:1.7">
+        <p style="margin-bottom:8px"><strong>3-pane layout</strong> — queue + detail + annotations. Sequential review workflow.</p>
+        <p style="margin-bottom:8px"><strong>SLA tracking</strong> — 6h remaining of 24h window, shown in header tags.</p>
+        <p style="margin-bottom:8px"><strong>Role-gated actions</strong> — Approve/Reject only for Senior Reviewer role.</p>
+        <p><strong>Audit trail</strong> — immutable log of all events, system + manual.</p>
+      </div>
+    </div> -->
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P05 WELCOME ═══ -->
+<div class="page" id="p05">
+  <div class="steps-row">
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Registration</div></div>
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Documents</div></div>
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Verification</div></div>
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Review</div></div>
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Activation</div></div>
+  </div>
+  <div class="hero-green">
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:16px">✓ Onboarding complete</div>
+    <div style="font-size:28px;font-weight:600;color:#fff;margin-bottom:8px;letter-spacing:-.5px">Welcome to Ricoh Capital, James Davies.</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.75);margin-bottom:24px;max-width:500px">Your account for Acme Finance Ltd is now active. Start submitting deals, building quotes, and managing your pipeline today.</div>
+    <div style="display:flex;gap:12px">
+      <button class="btn" style="background:#fff;color:var(--green-d);font-size:13px;padding:10px 24px" onclick="fireConfetti();nav('p10');showToast('🎉 Welcome to the portal!')">Enter portal →</button>
+      <button class="btn" style="background:transparent;border:1.5px solid rgba(255,255,255,.4);color:#fff;font-size:13px;padding:10px 20px" onclick="showToast('Starting 2-minute tour…')">▶ Take a tour</button>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🔑 Your login credentials</div>
+      <div class="grid-3" style="gap:10px;margin-bottom:14px">
+        <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:10px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--tx4);margin-bottom:4px">Portal URL</div>
+          <div style="font-size:11px;font-family:'DM Mono',monospace">portal.ricohcapital.co.uk</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:10px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--tx4);margin-bottom:4px">Username</div>
+          <div style="font-size:11px;font-family:'DM Mono',monospace">james@acmefinance.co.uk</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:10px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--tx4);margin-bottom:4px">Temp password</div>
+          <div style="font-size:11px;font-family:'DM Mono',monospace" id="pwdisp">••••••••</div>
+          <div style="font-size:10px;color:var(--blue);cursor:pointer;margin-top:3px" onclick="document.getElementById('pwdisp').textContent=document.getElementById('pwdisp').textContent==='••••••••'?'Acme@2025!':'••••••••'">Show / hide</div>
+        </div>
+      </div>
+      <div class="info-banner amber"><span>⚠</span><div style="font-size:11px;color:var(--tx2)"><strong style="color:var(--amber)">Set a new password on first login.</strong> Temporary password expires in 72 hours.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">✅ First steps</div>
+      <div id="firstSteps">
+        <div class="check-row" onclick="tickStep(this)"><div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--green);background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">✓</div><div style="flex:1;font-size:12px;text-decoration:line-through;color:var(--tx3)">Sign in &amp; set new password</div></div>
+        <div class="check-row" onclick="tickStep(this)"><div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--bdrm);display:flex;align-items:center;justify-content:center;flex-shrink:0"></div><div style="flex:1;font-size:12px">Complete originator profile</div><button class="btn btn-sm btn-ghost" style="font-size:10px" onclick="event.stopPropagation();showToast('Opening originator profile…')">Do now</button></div>
+        <div class="check-row" onclick="tickStep(this)"><div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--bdrm);display:flex;align-items:center;justify-content:center;flex-shrink:0"></div><div style="flex:1;font-size:12px">Submit your first deal</div><button class="btn btn-sm btn-ghost" style="font-size:10px" onclick="event.stopPropagation();nav('p06')">Start →</button></div>
+        <div class="check-row" onclick="tickStep(this)"><div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--bdrm);display:flex;align-items:center;justify-content:center;flex-shrink:0"></div><div style="flex:1;font-size:12px">Invite a team member <span class="tag gray" style="margin-left:4px">optional</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="card" style="cursor:pointer;transition:box-shadow .15s" onclick="nav('p06')" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''"><div style="font-size:22px;margin-bottom:8px">⚡</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Quick Deal Capture</div><div style="font-size:11px;color:var(--tx3)">Submit a deal in under 2 minutes with live payment calc</div></div>
+    <div class="card" style="cursor:pointer;transition:box-shadow .15s" onclick="nav('p21')" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''"><div style="font-size:22px;margin-bottom:8px">💬</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Quote Generation</div><div style="font-size:11px;color:var(--tx3)">Build multi-scenario quotes and send to customers</div></div>
+    <div class="card" style="cursor:pointer;transition:box-shadow .15s" onclick="nav('p10')" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''"><div style="font-size:22px;margin-bottom:8px">📊</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Asset Portfolio</div><div style="font-size:11px;color:var(--tx3)">Monitor all active contracts and payment schedules</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P06 DEAL INITIATION ═══ -->
+<div class="page" id="p06">
+  <div class="page-header"><div class="ph-badge coral">Quick Deal Capture — Step 1 of 4</div><div class="ph-title">New Deal</div><div class="ph-sub">Start a new finance application. Fields marked * are required.</div></div>
+  <div class="steps-row">
+    <div class="step-node active"><div class="step-circ active">1</div><div class="step-lbl active">Initiation</div></div>
+    <div class="step-node"><div class="step-circ wait">2</div><div class="step-lbl">Asset details</div></div>
+    <div class="step-node"><div class="step-circ wait">3</div><div class="step-lbl">Review</div></div>
+    <div class="step-node"><div class="step-circ wait">4</div><div class="step-lbl">Confirmation</div></div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Customer &amp; deal details</div>
+        <div class="form-field"><div class="field-label">Customer name <span class="req">*</span></div><input class="form-input" placeholder="Search existing or enter new…" value="TechWorks Solutions Ltd"></div>
+        <div class="form-field"><div class="field-label">Product type <span class="req">*</span></div>
+        <select class="form-select"><option>Asset Finance — Hire Purchase</option><option>Asset Finance — Finance Lease</option><option>Equipment Leasing</option><option>Commercial Mortgage</option></select></div>
+        <div class="form-field"><div class="field-label">Your reference <span class="req">*</span></div><input class="form-input" placeholder="e.g. ACM-2025-001" value="ACM-2025-041"></div>
+        <div class="form-field"><div class="field-label">Preferred start date</div><input class="form-input" type="date" value="2025-02-15"></div>
+        <div class="form-field"><div class="field-label">Notes</div><textarea class="form-textarea" placeholder="Any special instructions…"></textarea></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost">Save draft</button>
+        <button class="btn btn-primary" onclick="nav('p07')">Continue → Asset details</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="background:var(--s2);border-style:dashed">
+        <div style="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:10px">💡 Getting started</div>
+        <div style="font-size:11px;color:var(--tx2);line-height:1.7">
+          <p style="margin-bottom:6px">Search for an existing customer or enter a new one — they'll be saved to your CRM automatically.</p>
+          <p>Your originator reference helps you track deals across systems. We'll also generate a Ricoh reference on submission.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P07 ASSET DETAILS ═══ -->
+<div class="page" id="p07">
+  <div class="page-header"><div class="ph-badge coral">Quick Deal Capture — Step 2 of 4</div><div class="ph-title">Asset &amp; Financial Details</div><div class="ph-sub">Enter the asset specifics and structure the finance terms.</div></div>
+  <div class="steps-row">
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Initiation</div></div>
+    <div class="step-node active"><div class="step-circ active">2</div><div class="step-lbl active">Asset details</div></div>
+    <div class="step-node"><div class="step-circ wait">3</div><div class="step-lbl">Review</div></div>
+    <div class="step-node"><div class="step-circ wait">4</div><div class="step-lbl">Confirmation</div></div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">🏗️ Asset information</div>
+        <div class="grid-2">
+          <div class="form-field"><div class="field-label">Asset type <span class="req">*</span></div><select class="form-select"><option>Commercial vehicle</option><option>Plant &amp; machinery</option><option>Technology</option></select></div>
+          <div class="form-field"><div class="field-label">Make <span class="req">*</span></div><input class="form-input" value="Mercedes-Benz"></div>
+          <div class="form-field"><div class="field-label">Model <span class="req">*</span></div><input class="form-input" value="Sprinter 316 CDI"></div>
+          <div class="form-field"><div class="field-label">Year</div><input class="form-input" value="2024"></div>
+        </div>
+        <div class="form-field"><div class="field-label">Net asset value <span class="req">*</span></div><input class="form-input" value="42000" oninput="calcPayment()" id="assetVal"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">💰 Finance structure</div>
+        <div class="grid-2">
+          <div class="form-field"><div class="field-label">Term (months) <span class="req">*</span></div><select class="form-select" id="termSel" onchange="calcPayment()"><option value="24">24 months</option><option value="36" selected>36 months</option><option value="48">48 months</option><option value="60">60 months</option></select></div>
+          <div class="form-field"><div class="field-label">Deposit</div><input class="form-input" value="4200" oninput="calcPayment()" id="depositVal"></div>
+          <div class="form-field"><div class="field-label">Rate type</div><select class="form-select" id="rateType" onchange="calcPayment()"><option>Fixed</option><option>Variable</option></select></div>
+          <div class="form-field"><div class="field-label">Balloon payment</div><input class="form-input" value="0" oninput="calcPayment()" id="balloonVal"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="nav('p06')">← Back</button>
+        <button class="btn btn-primary" onclick="nav('p08')">Continue → Review</button>
+      </div>
+    </div>
+    <div>
+      <div class="calc-box">
+        <div class="cb-lbl">Monthly repayment</div>
+        <div class="cb-val" id="calcResult">£1,089/mo</div>
+        <div class="cb-sub" id="calcMeta">36 months · 7.2% APR · Total: £39,204</div>
+      </div>
+      <div class="card" style="background:var(--s2);border-style:dashed">
+        <div style="font-size:11px;color:var(--tx2);line-height:1.7">
+          <p style="margin-bottom:6px">💡 <strong>Live calculation</strong> — updates as you type. Final rate confirmed at credit assessment.</p>
+          <p>Balloon payments reduce monthly repayments but require a lump sum at the end of term.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P08 REVIEW ═══ -->
+<div class="page" id="p08">
+  <div class="page-header"><div class="ph-badge coral">Quick Deal Capture — Step 3 of 4</div><div class="ph-title">Review &amp; Submit</div><div class="ph-sub">Check all details before submitting to credit assessment.</div></div>
+  <div class="steps-row">
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Initiation</div></div>
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Asset details</div></div>
+    <div class="step-node active"><div class="step-circ active">3</div><div class="step-lbl active">Review</div></div>
+    <div class="step-node"><div class="step-circ wait">4</div><div class="step-lbl">Confirmation</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Deal summary <span style="font-size:11px;font-weight:400;color:var(--tx3)">· All fields read-only — <span style="color:var(--coral);cursor:pointer" onclick="nav('p06')">edit deal details</span> or <span style="color:var(--coral);cursor:pointer" onclick="nav('p07')">edit asset &amp; finance</span></span></div>
+    <div class="grid-2" style="gap:0;border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--bdr);border-right:1px solid var(--bdr)"><div style="font-size:10px;color:var(--tx4);margin-bottom:2px">Customer</div><div style="font-size:12px;font-weight:500">TechWorks Solutions Ltd</div></div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--bdr)"><div style="font-size:10px;color:var(--tx4);margin-bottom:2px">Product</div><div style="font-size:12px;font-weight:500">Asset Finance — Hire Purchase</div></div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--bdr);border-right:1px solid var(--bdr)"><div style="font-size:10px;color:var(--tx4);margin-bottom:2px">Asset</div><div style="font-size:12px;font-weight:500">2024 Mercedes-Benz Sprinter 316 CDI</div></div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--bdr)"><div style="font-size:10px;color:var(--tx4);margin-bottom:2px">Asset value</div><div style="font-size:12px;font-weight:500">£42,000</div></div>
+      <div style="padding:10px 14px;border-right:1px solid var(--bdr)"><div style="font-size:10px;color:var(--tx4);margin-bottom:2px">Finance terms</div><div style="font-size:12px;font-weight:500">36 months · £4,200 deposit · Fixed rate</div></div>
+      <div style="padding:10px 14px"><div style="font-size:10px;color:var(--tx4);margin-bottom:2px">Monthly payment</div><div style="font-size:12px;font-weight:600;color:var(--blue)">£1,089/month</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;cursor:pointer" onclick="this.querySelector('.cb-box').classList.toggle('checked');this.querySelector('.cb-box').textContent=this.querySelector('.cb-box').classList.contains('checked')?'✓':''">
+      <div class="cb-box" style="width:18px;height:18px;border-radius:3px;border:2px solid var(--bdrm);background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all .15s">✓</div>
+      <div style="font-size:12px;color:var(--tx2);line-height:1.5">I confirm the information provided is accurate. I understand this application is subject to credit assessment and that approval is not guaranteed.</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+    <button class="btn btn-ghost" onclick="nav('p07')">← Back</button>
+    <button class="btn btn-primary" onclick="nav('p09');showToast('✓ Deal submitted to credit assessment')">Submit to credit →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P09 CONFIRMATION ═══ -->
+<div class="page" id="p09">
+  <div class="steps-row">
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Initiation</div></div>
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Asset details</div></div>
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Review</div></div>
+    <div class="step-node done"><div class="step-circ done">✓</div><div class="step-lbl done">Submitted</div></div>
+  </div>
+  <div style="text-align:center;padding:40px 20px">
+    <div style="font-size:48px;margin-bottom:16px">✅</div>
+    <div style="font-size:24px;font-weight:600;margin-bottom:8px;letter-spacing:-.5px">Deal submitted successfully</div>
+    <div style="font-size:13px;color:var(--tx3);margin-bottom:24px">Your application has been sent to credit assessment. You'll receive an update within 4 business hours.</div>
+    <div style="display:inline-block;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px 28px;margin-bottom:24px">
+      <div style="font-size:10px;color:var(--tx4);margin-bottom:4px">Reference number</div>
+      <div style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--coral)">RC-2025-08741</div>
+    </div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:28px">Expected decision: <strong>by 5pm today</strong> · Status updates sent to james@acmefinance.co.uk</div>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <button class="btn btn-ghost" onclick="nav('p10')">View portfolio →</button>
+      <button class="btn btn-primary" onclick="nav('p06')">Submit another deal</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P10 PORTFOLIO DASHBOARD ═══ -->
+<div class="page" id="p10">
+  <div class="page-header"><div class="ph-badge blue">Asset Portfolio</div><div class="ph-title">Portfolio Dashboard</div><div class="ph-sub">Live view of all active contracts and assets.</div></div>
+  <div class="grid-4" style="margin-bottom:20px">
+    <div class="metric-card" onclick="showToast('Filter by active contracts')"><div class="mc-val" style="color:var(--blue)">24</div><div class="mc-lbl">Active contracts</div><div class="mc-delta up">↑ 3 this month</div></div>
+    <div class="metric-card" onclick="showToast('Filter by portfolio value')"><div class="mc-val">£2.1M</div><div class="mc-lbl">Portfolio value</div><div class="mc-delta up">↑ £140K</div></div>
+    <div class="metric-card" onclick="showToast('Filter by overdue')"><div class="mc-val" style="color:var(--amber)">2</div><div class="mc-lbl">Overdue payments</div><div class="mc-delta dn">↑ 1 new</div></div>
+    <div class="metric-card" onclick="showToast('Filter by maturing soon')"><div class="mc-val" style="color:var(--coral)">4</div><div class="mc-lbl">Maturing in 90 days</div><div class="mc-delta">Renewal opportunity</div></div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+    <input class="form-input" style="max-width:280px" placeholder="🔍 Search contracts…">
+    <select class="form-select" style="max-width:160px"><option>All statuses</option><option>Active</option><option>Overdue</option><option>Maturing</option></select>
+    <select class="form-select" style="max-width:160px"><option>All products</option><option>Asset finance</option><option>Equipment leasing</option></select>
+    <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="nav('p11')">⚙ Configure view</button>
+    <button class="btn btn-ghost btn-sm" onclick="nav('p13')">📥 Export</button>
+  </div>
+  <div class="portfolio-table-wrap">
+    <table class="table">
+      <thead><tr><th>Contract ref</th><th>Customer</th><th>Asset</th><th>Monthly</th><th>Remaining</th><th>Next payment</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr onclick="nav('p12')"><td style="font-family:'DM Mono',monospace;font-size:11px">RC-2025-08741</td><td>TechWorks Solutions</td><td>2024 Sprinter 316</td><td>£1,089</td><td>35 / 36</td><td>15 Feb 2025</td><td><span class="tag green">Active</span></td><td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();nav('p12')">View</button></td></tr>
+        <tr onclick="showToast('Loading contract RC-2025-07823…')"><td style="font-family:'DM Mono',monospace;font-size:11px">RC-2025-07823</td><td>Green Valley Farms</td><td>2023 JCB 3CX</td><td>£890</td><td>18 / 48</td><td>1 Feb 2025</td><td><span class="tag amber">Overdue</span></td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+        <tr onclick="showToast('Loading contract RC-2024-06512…')"><td style="font-family:'DM Mono',monospace;font-size:11px">RC-2024-06512</td><td>Apex Logistics Ltd</td><td>2022 DAF XF 480</td><td>£1,340</td><td>4 / 60</td><td>10 Feb 2025</td><td><span class="tag coral">Maturing</span></td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+        <tr onclick="showToast('Loading contract RC-2024-05901…')"><td style="font-family:'DM Mono',monospace;font-size:11px">RC-2024-05901</td><td>Sunrise Bakeries</td><td>2023 Rational SCC</td><td>£420</td><td>22 / 36</td><td>20 Feb 2025</td><td><span class="tag green">Active</span></td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+        <tr onclick="showToast('Loading contract RC-2024-04720…')"><td style="font-family:'DM Mono',monospace;font-size:11px">RC-2024-04720</td><td>MedTech Devices</td><td>2023 MRI Scanner</td><td>£2,180</td><td>8 / 60</td><td>5 Feb 2025</td><td><span class="tag green">Active</span></td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P11 VIEW CONFIG ═══ -->
+<div class="page" id="p11">
+  <div class="page-header"><div class="ph-badge blue">Portfolio</div><div class="ph-title">View Configurator</div><div class="ph-sub">Customise the columns and sorting of your portfolio table.</div></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Column visibility</div>
+      <div style="display:flex;flex-direction:column;gap:8px" id="colToggles">
+        <div class="check-row" onclick="toggleCol(this)"><div style="width:16px;height:16px;border-radius:3px;border:2px solid var(--coral);background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">✓</div><div style="flex:1;font-size:12px">Contract reference</div></div>
+        <div class="check-row" onclick="toggleCol(this)"><div style="width:16px;height:16px;border-radius:3px;border:2px solid var(--coral);background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">✓</div><div style="flex:1;font-size:12px">Customer name</div></div>
+        <div class="check-row" onclick="toggleCol(this)"><div style="width:16px;height:16px;border-radius:3px;border:2px solid var(--coral);background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">✓</div><div style="flex:1;font-size:12px">Asset description</div></div>
+        <div class="check-row" onclick="toggleCol(this)"><div style="width:16px;height:16px;border-radius:3px;border:2px solid var(--coral);background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">✓</div><div style="flex:1;font-size:12px">Monthly payment</div></div>
+        <div class="check-row" onclick="toggleCol(this)"><div style="width:16px;height:16px;border-radius:3px;border:2px solid var(--bdrm);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0"></div><div style="flex:1;font-size:12px">Asset value</div></div>
+        <div class="check-row" onclick="toggleCol(this)"><div style="width:16px;height:16px;border-radius:3px;border:2px solid var(--bdrm);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0"></div><div style="flex:1;font-size:12px">Originator reference</div></div>
+        <div class="check-row" onclick="toggleCol(this)"><div style="width:16px;height:16px;border-radius:3px;border:2px solid var(--coral);background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">✓</div><div style="flex:1;font-size:12px">Status badge</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Saved views</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="check-row" style="border-radius:var(--r);border:1px solid var(--coral-m);background:var(--coral-l)"><div style="font-size:12px;font-weight:500;color:var(--coral);flex:1">Default view</div><span class="tag coral">Active</span></div>
+          <div class="check-row" style="border-radius:var(--r);border:1px solid var(--bdr)"><div style="font-size:12px;flex:1">Overdue focus</div><button class="btn btn-ghost btn-sm" onclick="showToast('Overdue focus view activated')">Load</button></div>
+          <div class="check-row" style="border-radius:var(--r);border:1px solid var(--bdr)"><div style="font-size:12px;flex:1">Maturing contracts</div><button class="btn btn-ghost btn-sm" onclick="showToast('Maturing contracts view activated')">Load</button></div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px">
+          <input class="form-input" placeholder="Name your view…" style="flex:1">
+          <button class="btn btn-primary" onclick="showToast('View saved!')">Save view</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="nav('p10')">← Back to portfolio</button>
+        <button class="btn btn-primary" onclick="nav('p10');showToast('View configuration saved')">Apply changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P12 ASSET DETAIL ═══ -->
+<div class="page" id="p12">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <button class="btn btn-ghost btn-sm" onclick="nav('p10')">← Portfolio</button>
+    <span class="tag blue" style="font-family:'DM Mono',monospace">RC-2025-08741</span>
+    <span class="tag green"><span class="sdot green" style="margin-right:3px"></span>Active</span>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div><div style="font-size:15px;font-weight:600;margin-bottom:3px">2024 Mercedes-Benz Sprinter 316 CDI</div><div style="font-size:12px;color:var(--tx3)">TechWorks Solutions Ltd · Asset Finance — Hire Purchase</div></div>
+          <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" onclick="showToast('Opening statement download…')">📄 Statement</button><button class="btn btn-ghost btn-sm" onclick="showToast('Requesting early settlement…')">Early settlement</button></div>
+        </div>
+        <div class="grid-2" style="gap:0;border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px">
+          <div style="padding:10px 12px;border-bottom:1px solid var(--bdr);border-right:1px solid var(--bdr)"><div style="font-size:10px;color:var(--tx4)">Asset value</div><div style="font-size:13px;font-weight:600">£42,000</div></div>
+          <div style="padding:10px 12px;border-bottom:1px solid var(--bdr)"><div style="font-size:10px;color:var(--tx4)">Monthly payment</div><div style="font-size:13px;font-weight:600;color:var(--blue)">£1,089</div></div>
+          <div style="padding:10px 12px;border-right:1px solid var(--bdr)"><div style="font-size:10px;color:var(--tx4)">Term remaining</div><div style="font-size:13px;font-weight:600">35 of 36 months</div></div>
+          <div style="padding:10px 12px"><div style="font-size:10px;color:var(--tx4)">Next payment</div><div style="font-size:13px;font-weight:600">15 Feb 2025</div></div>
+        </div>
+      </div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:14px">
+        <div class="scenario-tab active" onclick="switchAssetTab('payments',this)">Payment schedule</div>
+        <div class="scenario-tab" onclick="switchAssetTab('docs',this)">Documents</div>
+        <div class="scenario-tab" onclick="switchAssetTab('activity',this)">Activity</div>
+      </div>
+      <div id="at-payments">
+        <div class="portfolio-table-wrap">
+          <table class="table"><thead><tr><th>#</th><th>Due date</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:'DM Mono',monospace">01</td><td>15 Jan 2025</td><td>£1,089</td><td><span class="tag green">Paid</span></td></tr>
+            <tr><td style="font-family:'DM Mono',monospace">02</td><td>15 Feb 2025</td><td>£1,089</td><td><span class="tag amber">Due soon</span></td></tr>
+            <tr><td style="font-family:'DM Mono',monospace">03</td><td>15 Mar 2025</td><td>£1,089</td><td><span class="tag gray">Upcoming</span></td></tr>
+            <tr><td style="font-family:'DM Mono',monospace">04</td><td>15 Apr 2025</td><td>£1,089</td><td><span class="tag gray">Upcoming</span></td></tr>
+            <tr><td style="font-family:'DM Mono',monospace">…</td><td colspan="3" style="color:var(--tx4);font-style:italic">32 more payments</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <div id="at-docs" style="display:none">
+        <div class="check-row"><div class="cr-ic" style="background:var(--blue-l)">📄</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Finance agreement.pdf</div><div style="font-size:10px;color:var(--tx3)">Signed 14 Jan 2025 · 2.1 MB</div></div><button class="btn btn-ghost btn-sm" onclick="showToast('Downloading…')">Download</button></div>
+        <div class="check-row"><div class="cr-ic" style="background:var(--blue-l)">📄</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Delivery note.pdf</div><div style="font-size:10px;color:var(--tx3)">14 Jan 2025 · 480 KB</div></div><button class="btn btn-ghost btn-sm" onclick="showToast('Downloading…')">Download</button></div>
+      </div>
+      <div id="at-activity" style="display:none">
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--green)"></div></div><div><div class="tl-action">Payment received — Jan 2025</div><div class="tl-time">15 Jan 2025</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--blue)"></div></div><div><div class="tl-action">Contract commenced</div><div class="tl-time">14 Jan 2025</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--bdrs)"></div></div><div><div class="tl-action">Deal approved by credit team</div><div class="tl-time">10 Jan 2025</div></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card"><div class="card-title">Progress to completion</div><div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span>1 of 36 payments made</span><span style="color:var(--tx3)">2.8%</span></div><div class="prog-track"><div class="prog-fill" style="width:2.8%;background:var(--blue)"></div></div></div></div>
+      <div class="card"><div class="card-title">Quick actions</div><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-ghost" style="justify-content:flex-start" onclick="showToast('Downloading account statement…')">📄 Download statement</button><button class="btn btn-ghost" style="justify-content:flex-start" onclick="showToast('Opening early settlement calculator…')">💰 Early settlement quote</button><button class="btn btn-ghost" style="justify-content:flex-start" onclick="showToast('Opening variation request…')">🔄 Request variation</button></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P13 EXPORT ═══ -->
+<div class="page" id="p13">
+  <div class="page-header"><div class="ph-badge blue">Portfolio</div><div class="ph-title">Export &amp; Reports</div><div class="ph-sub">Download portfolio data or schedule automated reports.</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Export data</div>
+        <div class="form-field"><div class="field-label">Export format</div>
+        <div style="display:flex;gap:10px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px"><input type="radio" name="fmt" checked> CSV</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px"><input type="radio" name="fmt"> Excel (.xlsx)</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px"><input type="radio" name="fmt"> PDF summary</label>
+        </div></div>
+        <div class="form-field"><div class="field-label">Date range</div>
+        <div class="grid-2">
+          <input class="form-input" type="date" value="2025-01-01">
+          <input class="form-input" type="date" value="2025-01-31">
+        </div></div>
+        <div class="form-field"><div class="field-label">Fields to include</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="fieldToggles">
+          <span class="tag coral" style="cursor:pointer" onclick="this.className=this.className.includes('coral')?'tag gray':'tag coral'">Contract ref ✓</span>
+          <span class="tag coral" style="cursor:pointer" onclick="this.className=this.className.includes('coral')?'tag gray':'tag coral'">Customer ✓</span>
+          <span class="tag coral" style="cursor:pointer" onclick="this.className=this.className.includes('coral')?'tag gray':'tag coral'">Asset ✓</span>
+          <span class="tag coral" style="cursor:pointer" onclick="this.className=this.className.includes('coral')?'tag gray':'tag coral'">Monthly payment ✓</span>
+          <span class="tag gray" style="cursor:pointer" onclick="this.className=this.className.includes('coral')?'tag gray':'tag coral'">Asset value</span>
+          <span class="tag gray" style="cursor:pointer" onclick="this.className=this.className.includes('coral')?'tag gray':'tag coral'">Term</span>
+        </div></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="showToast('📥 Downloading portfolio_export_jan2025.csv…')">📥 Download now</button>
+          <button class="btn btn-ghost" onclick="showToast('✉ Export sent to james@acmefinance.co.uk')">✉ Email me</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Scheduled reports</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:14px">Automate regular exports to your inbox.</div>
+        <div class="form-field"><div class="field-label">Frequency</div>
+        <select class="form-select"><option>Weekly (every Monday)</option><option>Monthly (1st of month)</option><option>Quarterly</option></select></div>
+        <div class="form-field"><div class="field-label">Send to</div><input class="form-input" value="james@acmefinance.co.uk"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <div style="width:36px;height:20px;border-radius:10px;background:var(--green);cursor:pointer;position:relative;transition:background .15s" onclick="showToast('Scheduled reports toggled')"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;right:2px;top:2px"></div></div>
+          <span style="font-size:12px;color:var(--tx2)">Reports enabled</span>
+        </div>
+        <button class="btn btn-primary" onclick="showToast('✅ Scheduled report configured — first delivery Monday')">Save schedule</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P14 SELF-SERVICE LOGIN ═══ -->
+<div class="page" id="p14">
+  <div style="max-width:400px;margin:40px auto">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="width:48px;height:48px;background:var(--coral);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;margin:0 auto 14px">RC</div>
+      <div style="font-size:20px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px">Customer Portal</div>
+      <div style="font-size:12px;color:var(--tx3)">Sign in to view your contracts and account</div>
+    </div>
+    <div class="card">
+      <div class="form-field"><div class="field-label">Email address</div><input class="form-input" type="email" placeholder="you@company.com" value="contact@techworks.co.uk"></div>
+      <div class="form-field"><div class="field-label">Password</div><input class="form-input" type="password" value="password123"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:12px" onclick="nav('p15');showToast('Signed in as TechWorks Solutions')">Sign in</button>
+      <div style="text-align:center">
+        <span style="font-size:11px;color:var(--tx3)">Or sign in with </span>
+        <span style="font-size:11px;font-weight:500;color:var(--blue);cursor:pointer" onclick="showToast('SSO provider selected')">Oracle SSO</span>
+      </div>
+      <div style="border-top:1px solid var(--bdr);margin-top:12px;padding-top:12px;text-align:center">
+        <span style="font-size:11px;color:var(--blue);cursor:pointer" onclick="showToast('Password reset email sent')">Forgot your password?</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P15 CUSTOMER DASHBOARD ═══ -->
+<div class="page" id="p15">
+  <div class="page-header"><div class="ph-badge green">Customer Portal</div><div class="ph-title">My Dashboard</div><div class="ph-sub">Welcome back, TechWorks Solutions Ltd.</div></div>
+  <div class="grid-2" style="margin-bottom:14px">
+    <div class="metric-card"><div class="mc-val" style="color:var(--blue)">3</div><div class="mc-lbl">Active contracts</div></div>
+    <div class="metric-card"><div class="mc-val">£3,209</div><div class="mc-lbl">Next payment due — 15 Feb</div><div class="mc-delta" style="color:var(--amber)">3 days away</div></div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Active contracts</div>
+        <div class="check-row" onclick="nav('p12')"><div class="cr-ic" style="background:var(--blue-l)">🚐</div><div style="flex:1"><div style="font-size:12px;font-weight:500">2024 Mercedes Sprinter</div><div style="font-size:10px;color:var(--tx3)">RC-2025-08741 · £1,089/mo · 35 months remaining</div></div><span class="tag green">Active</span></div>
+        <div class="check-row" onclick="showToast('Loading contract details…')"><div class="cr-ic" style="background:var(--s2)">💻</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Dell Server Rack</div><div style="font-size:10px;color:var(--tx3)">RC-2024-06210 · £780/mo · 22 months remaining</div></div><span class="tag green">Active</span></div>
+        <div class="check-row" onclick="showToast('Loading contract details…')"><div class="cr-ic" style="background:var(--amber-l)">🖨️</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Xerox C8130 Fleet</div><div style="font-size:10px;color:var(--tx3)">RC-2024-05014 · £340/mo · 1 month remaining</div></div><span class="tag coral">Maturing</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Recent quotes</div>
+        <div class="check-row" onclick="showToast('Loading quote QT-2025-0041…')"><div class="cr-ic" style="background:var(--coral-l)">📋</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Van fleet — 3 units</div><div style="font-size:10px;color:var(--tx3)">QT-2025-0041 · £3,267/mo · Sent 12 Jan</div></div><span class="tag coral">Pending acceptance</span></div>
+        <div class="check-row" onclick="showToast('Loading quote QT-2024-0298…')"><div class="cr-ic" style="background:var(--s2)">📋</div><div style="flex:1"><div style="font-size:12px;font-weight:500">IT equipment refresh</div><div style="font-size:10px;color:var(--tx3)">QT-2024-0298 · Expired 10 Dec</div></div><span class="tag gray">Expired</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Quick actions</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-ghost" style="justify-content:flex-start" onclick="nav('p16')">📄 Download statement</button>
+          <button class="btn btn-ghost" style="justify-content:flex-start" onclick="nav('p16')">💰 Request early settlement</button>
+          <button class="btn btn-ghost" style="justify-content:flex-start" onclick="nav('p17')">🔔 View notifications <span class="ln-badge" style="margin-left:8px">5</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P16 ACCOUNT ACTIONS ═══ -->
+<div class="page" id="p16">
+  <div class="page-header"><div class="ph-badge green">Customer Portal</div><div class="ph-title">Account Actions</div><div class="ph-sub">Manage your account and make service requests.</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Statements &amp; documents</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--r)"><div><div style="font-size:12px;font-weight:500">Account statement</div><div style="font-size:10px;color:var(--tx3)">All contracts — Jan 2025</div></div><button class="btn btn-ghost btn-sm" onclick="showToast('📄 Downloading statement…')">Download PDF</button></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--r)"><div><div style="font-size:12px;font-weight:500">Finance agreements</div><div style="font-size:10px;color:var(--tx3)">All signed agreements</div></div><button class="btn btn-ghost btn-sm" onclick="showToast('📄 Downloading agreements…')">Download ZIP</button></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--r)"><div><div style="font-size:12px;font-weight:500">Payment history</div><div style="font-size:10px;color:var(--tx3)">All payments to date</div></div><button class="btn btn-ghost btn-sm" onclick="showToast('📄 Downloading payment history…')">Download CSV</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Service requests</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;cursor:pointer" onclick="showToast('Opening early settlement request…')"><div style="font-size:12px;font-weight:500;margin-bottom:3px">💰 Request early settlement</div><div style="font-size:11px;color:var(--tx3)">Get a settlement quote for any active contract</div></div>
+          <div style="border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;cursor:pointer" onclick="showToast('Opening upgrade/variation form…')"><div style="font-size:12px;font-weight:500;margin-bottom:3px">🔄 Request upgrade / variation</div><div style="font-size:11px;color:var(--tx3)">Change terms, extend, or upgrade your agreement</div></div>
+          <div style="border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;cursor:pointer" onclick="showToast('Opening support chat…')"><div style="font-size:12px;font-weight:500;margin-bottom:3px">💬 Contact us</div><div style="font-size:11px;color:var(--tx3)">Speak with our customer support team</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Update bank details</div>
+        <div class="form-field"><div class="field-label">Account holder name</div><input class="form-input" value="TechWorks Solutions Ltd"></div>
+        <div class="grid-2">
+          <div class="form-field"><div class="field-label">Sort code</div><input class="form-input" value="20-45-78"></div>
+          <div class="form-field"><div class="field-label">Account number</div><input class="form-input" value="12345678"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="showToast('Bank details update requested — verification email sent')">Submit change request</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P17 NOTIFICATIONS ═══ -->
+<div class="page" id="p17">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div><div class="ph-title" style="margin-bottom:2px">Notifications</div><div style="font-size:12px;color:var(--tx3)">5 unread</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="markAllRead()">Mark all read</button>
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Opening notification preferences…')">Settings</button>
+    </div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden" id="notifList">
+    <div class="notif-item unread" onclick="readNotif(this)"><div class="notif-dot"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">Payment reminder — RC-2025-08741 due in 3 days</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">2024 Mercedes Sprinter · £1,089 due 15 Feb</div></div><div style="font-size:10px;color:var(--tx4);font-family:'DM Mono',monospace">2h ago</div></div>
+    <div class="notif-item unread" onclick="readNotif(this)"><div class="notif-dot"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">Quote QT-2025-0041 accepted by TechWorks</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">Van fleet — 3 units · Next steps: sign agreement</div></div><div style="font-size:10px;color:var(--tx4);font-family:'DM Mono',monospace">Yesterday</div></div>
+    <div class="notif-item unread" onclick="readNotif(this)"><div class="notif-dot"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">Deal RC-2025-08741 approved by credit team</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">Approved — commences 14 Jan 2025</div></div><div style="font-size:10px;color:var(--tx4);font-family:'DM Mono',monospace">14 Jan</div></div>
+    <div class="notif-item unread" onclick="readNotif(this)"><div class="notif-dot"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">Contract RC-2024-05014 maturing in 30 days</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">Xerox C8130 Fleet · Consider renewal or upgrade</div></div><div style="font-size:10px;color:var(--tx4);font-family:'DM Mono',monospace">12 Jan</div></div>
+    <div class="notif-item unread" onclick="readNotif(this)"><div class="notif-dot"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">Statement available — December 2024</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">Your monthly statement is ready to download</div></div><div style="font-size:10px;color:var(--tx4);font-family:'DM Mono',monospace">1 Jan</div></div>
+    <div class="notif-item" onclick="readNotif(this)"><div class="notif-dot read"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">Payment confirmed — Dec 2024</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">RC-2025-08741 · £1,089 received</div></div><div style="font-size:10px;color:var(--tx4);font-family:'DM Mono',monospace">15 Dec</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P18 PROSPECTS ═══ -->
+<div class="page" id="p18">
+  <div class="page-header"><div class="ph-badge amber">Lead &amp; Opp. Management</div><div class="ph-title">Prospect List</div><div class="ph-sub">Track and manage your leads and opportunities.</div></div>
+  <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+    <input class="form-input" style="max-width:260px" placeholder="🔍 Search prospects…">
+    <div style="display:flex;gap:6px">
+      <span class="tag gray" style="cursor:pointer;padding:4px 12px" onclick="showToast('Filter: All')">All</span>
+      <span class="tag coral" style="cursor:pointer;padding:4px 12px" onclick="showToast('Filter: New leads')">New leads</span>
+      <span class="tag amber" style="cursor:pointer;padding:4px 12px" onclick="showToast('Filter: Qualified')">Qualified</span>
+      <span class="tag blue" style="cursor:pointer;padding:4px 12px" onclick="showToast('Filter: Proposal')">Proposal</span>
+    </div>
+    <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="showToast('Opening new prospect form…')">+ New prospect</button>
+  </div>
+  <div class="portfolio-table-wrap">
+    <table class="table">
+      <thead><tr><th>Company</th><th>Contact</th><th>Stage</th><th>Product interest</th><th>Value est.</th><th>Assigned</th><th>Last activity</th><th></th></tr></thead>
+      <tbody>
+        <tr onclick="nav('p19')"><td><div style="font-size:12px;font-weight:500">Fresh Harvest Ltd</div><div style="font-size:10px;color:var(--tx3)">Bristol</div></td><td>Mark Owen</td><td><span class="tag blue">Proposal</span></td><td>Asset finance</td><td>£85,000</td><td>JD</td><td>Today</td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+        <tr onclick="showToast('Loading BuildRight Construction…')"><td><div style="font-size:12px;font-weight:500">BuildRight Construction</div><div style="font-size:10px;color:var(--tx3)">Leeds</div></td><td>Sarah Kim</td><td><span class="tag amber">Qualified</span></td><td>Equipment leasing</td><td>£220,000</td><td>JD</td><td>Yesterday</td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+        <tr onclick="showToast('Loading CityFleet Services…')"><td><div style="font-size:12px;font-weight:500">CityFleet Services</div><div style="font-size:10px;color:var(--tx3)">London</div></td><td>Peter Grant</td><td><span class="tag coral">New lead</span></td><td>Asset finance</td><td>£45,000</td><td>—</td><td>2 days ago</td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+        <tr onclick="showToast('Loading Solaris Renewables…')"><td><div style="font-size:12px;font-weight:500">Solaris Renewables</div><div style="font-size:10px;color:var(--tx3)">Edinburgh</div></td><td>Amy Chen</td><td><span class="tag green">Won</span></td><td>Equipment leasing</td><td>£310,000</td><td>JD</td><td>3 days ago</td><td><button class="btn btn-ghost btn-sm">View</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P19 PROSPECT PROFILE ═══ -->
+<div class="page" id="p19">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <button class="btn btn-ghost btn-sm" onclick="nav('p18')">← Prospects</button>
+    <span class="tag blue">Proposal</span>
+  </div>
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:20px">
+    <div style="width:48px;height:48px;border-radius:var(--rl);background:#E8F5E8;color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">FH</div>
+    <div style="flex:1">
+      <div style="font-size:16px;font-weight:600;margin-bottom:3px">Fresh Harvest Ltd</div>
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:8px">Bristol · Est. opportunity: £85,000 · Asset finance</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="showToast('Logging call…')">📞 Log call</button>
+        <button class="btn btn-ghost btn-sm" onclick="showToast('Composing email…')">✉ Log email</button>
+        <button class="btn btn-primary btn-sm" onclick="nav('p21')">💬 Create quote →</button>
+        <button class="btn btn-ghost btn-sm" onclick="nav('p20')">🔀 Qualify / convert</button>
+      </div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Company details</div>
+        <div class="grid-2" style="font-size:11px;gap:8px">
+          <div><div style="color:var(--tx4);margin-bottom:2px">Legal name</div><div style="font-weight:500">Fresh Harvest Ltd</div></div>
+          <div><div style="color:var(--tx4);margin-bottom:2px">Industry</div><div style="font-weight:500">Food &amp; agriculture</div></div>
+          <div><div style="color:var(--tx4);margin-bottom:2px">Annual turnover</div><div style="font-weight:500">£2.4M</div></div>
+          <div><div style="color:var(--tx4);margin-bottom:2px">Employees</div><div style="font-weight:500">48</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Contacts</div>
+        <div class="check-row"><div class="cr-ic" style="background:var(--s2)">👤</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Mark Owen</div><div style="font-size:10px;color:var(--tx3)">MD · mark@freshharvest.co.uk · 07700 900 123</div></div><span class="tag green">Primary</span></div>
+        <div class="check-row"><div class="cr-ic" style="background:var(--s2)">👤</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Julie Price</div><div style="font-size:10px;color:var(--tx3)">Finance Director · julie@freshharvest.co.uk</div></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Activity timeline</div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--blue)"></div></div><div><div class="tl-action">Quote QT-2025-0042 sent to Mark Owen</div><div class="tl-time">Today, 11:30</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--green)"></div></div><div><div class="tl-action">Call — 22 min. Discussed refrigeration unit requirements and budget.</div><div class="tl-time">Yesterday, 14:20</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--bdrs)"></div></div><div><div class="tl-action">New prospect created — referred by existing customer</div><div class="tl-time">10 Jan 2025</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P20 QUALIFY/CONVERT ═══ -->
+<div class="page" id="p20">
+  <div class="page-header"><div class="ph-badge amber">CRM</div><div class="ph-title">Qualify / Convert</div><div class="ph-sub">Assess prospect quality and convert to a customer or active deal.</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Qualification score — Fresh Harvest Ltd</div>
+        <div class="form-field"><div class="field-label">Budget confirmed?</div><select class="form-select"><option>Yes — £85,000 confirmed</option><option>No</option><option>Unknown</option></select></div>
+        <div class="form-field"><div class="field-label">Timeline</div><select class="form-select"><option>Immediate (within 30 days)</option><option>1–3 months</option><option>3–6 months</option></select></div>
+        <div class="form-field"><div class="field-label">Decision maker engaged?</div><select class="form-select"><option>Yes — MD and Finance Director</option><option>Partially</option><option>No</option></select></div>
+        <div class="form-field"><div class="field-label">Pipeline stage</div><select class="form-select"><option>New lead</option><option>Qualified</option><option selected>Proposal sent</option><option>Negotiation</option><option>Won</option><option>Lost</option></select></div>
+        <div class="form-field"><div class="field-label">Notes</div><textarea class="form-textarea" placeholder="Additional qualification notes…">Highly qualified — budget approved, decision Q1. MD very engaged. Main competitor is broker from Manchester.</textarea></div>
+        <button class="btn btn-primary" onclick="showToast('Qualification updated — prospect score: 87/100')">Save qualification</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="border-color:var(--green-m);background:var(--green-l)">
+        <div class="card-title" style="color:var(--green-d)">🔀 Convert to customer &amp; deal</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:14px;line-height:1.6">Ready to convert Fresh Harvest Ltd? This will create a customer record and link to a new deal application.</div>
+        <div class="form-field"><div class="field-label">Link to existing deal</div><input class="form-input" placeholder="Search deals… or create new"></div>
+        <button class="btn btn-green" onclick="showToast('✅ Fresh Harvest Ltd converted — customer record created');nav('p06')">Convert &amp; start deal →</button>
+      </div>
+      <div class="card">
+        <div style="text-align:center;padding:8px 0">
+          <div style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);margin-bottom:4px">87</div>
+          <div style="font-size:11px;color:var(--tx3)">Qualification score / 100</div>
+          <div style="margin-top:10px;font-size:12px;font-weight:500;color:var(--green-d)">✅ Highly qualified</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P21 QUOTE BUILDER ═══ -->
+<div class="page" id="p21">
+  <div class="page-header"><div class="ph-badge amber">Lead &amp; Opp. Management</div><div class="ph-title">Quote Builder</div><div class="ph-sub">Build a detailed quote and compare multiple scenarios.</div></div>
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <div class="scenario-tab active" id="sc1" onclick="switchScenario(1,this)">Scenario A</div>
+    <div class="scenario-tab" id="sc2" onclick="switchScenario(2,this)">Scenario B</div>
+    <button class="btn btn-ghost btn-sm" onclick="showToast('New scenario added')">+ Add scenario</button>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Customer &amp; asset</div>
+        <div class="form-field"><div class="field-label">Customer <span class="req">*</span></div><input class="form-input" value="Fresh Harvest Ltd"></div>
+        <div class="grid-2">
+          <div class="form-field"><div class="field-label">Asset type <span class="req">*</span></div><select class="form-select"><option>Refrigerated trailer</option><option>Commercial vehicle</option></select></div>
+          <div class="form-field"><div class="field-label">Asset value <span class="req">*</span></div><input class="form-input" id="qAssetVal" value="64000" oninput="calcQuote()"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Finance structure</div>
+        <div class="grid-2">
+          <div class="form-field"><div class="field-label">Term</div><select class="form-select" id="qTerm" onchange="calcQuote()"><option value="36">36 months</option><option value="48" selected>48 months</option><option value="60">60 months</option></select></div>
+          <div class="form-field"><div class="field-label">Deposit</div><input class="form-input" id="qDeposit" value="6400" oninput="calcQuote()"></div>
+          <div class="form-field"><div class="field-label">Rate type</div><select class="form-select"><option>Fixed</option><option>Variable</option></select></div>
+          <div class="form-field"><div class="field-label">Product</div><select class="form-select"><option>Finance lease</option><option>Hire purchase</option></select></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost">Save draft</button>
+        <button class="btn btn-primary" onclick="nav('p22')">Generate quote →</button>
+      </div>
+    </div>
+    <div>
+      <div class="calc-box">
+        <div class="cb-lbl">Monthly repayment</div>
+        <div class="cb-val" id="qCalcResult">£1,388/mo</div>
+        <div class="cb-sub" id="qCalcMeta">48 months · 7.2% APR · Total: £66,624</div>
+      </div>
+      <div class="card" id="scenBCard" style="display:none">
+        <div style="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:8px">Scenario B — Compare</div>
+        <div style="font-size:20px;font-weight:600;font-family:'DM Mono',monospace;color:var(--amber)">£1,166/mo</div>
+        <div style="font-size:11px;color:var(--tx3)">60 months · £6,400 deposit · Total: £69,960</div>
+      </div>
+      <div class="card" style="background:var(--s2);border-style:dashed">
+        <div style="font-size:11px;color:var(--tx2);line-height:1.7">
+          <p style="margin-bottom:6px">💡 Add Scenario B for a longer term option — tap the tab above.</p>
+          <p>Quotes are valid for 30 days and can be sent directly to the customer for eSign.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ P22 QUOTE OUTPUT ═══ -->
+<div class="page" id="p22">
+  <div class="page-header"><div class="ph-badge amber">Lead &amp; Opp. Management</div><div class="ph-title">Quote Output</div><div class="ph-sub">Preview and send your quote. Reference: QT-2025-0042</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card" style="background:var(--s2);border-color:var(--bdrm)">
+        <div style="border:1px solid var(--bdrm);border-radius:var(--r);background:var(--surface);padding:20px;min-height:300px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+            <div><div style="font-size:14px;font-weight:700;color:var(--coral)">RICOH CAPITAL</div><div style="font-size:10px;color:var(--tx3)">Finance Solutions</div></div>
+            <div style="text-align:right"><div style="font-size:10px;color:var(--tx4)">QUOTE</div><div style="font-size:12px;font-weight:700;font-family:'DM Mono',monospace">QT-2025-0042</div><div style="font-size:10px;color:var(--tx3)">Valid: 14 Feb 2025</div></div>
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">Fresh Harvest Ltd</div>
+          <div style="font-size:11px;color:var(--tx3);margin-bottom:16px">Prepared by: James Davies — Acme Finance Ltd</div>
+          <div style="border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden">
+            <div style="background:var(--s2);padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--tx4)">Finance proposal — Refrigerated trailer</div>
+            <div style="padding:10px 12px">
+              <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--tx3)">Asset value</span><span style="font-weight:500">£64,000</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--tx3)">Deposit</span><span style="font-weight:500">£6,400</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--tx3)">Term</span><span style="font-weight:500">48 months</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;font-weight:700"><span>Monthly payment</span><span style="color:var(--blue)">£1,388</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--tx4);text-align:center;margin-top:8px">PDF preview — actual output is branded and formatted</div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Send &amp; share</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn btn-primary" style="justify-content:center" onclick="showToast('✉ Quote sent to mark@freshharvest.co.uk')">✉ Send by email</button>
+          <button class="btn btn-ghost" style="justify-content:center" onclick="showToast('🔗 Shareable link copied to clipboard')">🔗 Copy shareable link</button>
+          <button class="btn btn-ghost" style="justify-content:center" onclick="showToast('📄 PDF downloaded: QT-2025-0042.pdf')">📄 Download PDF</button>
+          <button class="btn btn-green" style="justify-content:center" onclick="showToast('✍ eSign request sent to mark@freshharvest.co.uk')">✍ Request eSignature</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Link to opportunity</div>
+        <div class="form-field"><div class="field-label">Prospect / opportunity</div><input class="form-input" value="Fresh Harvest Ltd — Refrigerated trailer"></div>
+        <button class="btn btn-ghost btn-sm" onclick="showToast('Quote linked to Fresh Harvest opportunity')">Save link</button>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;color:var(--tx3);line-height:1.7">
+          <strong>QT-2025-0042</strong> · Valid until 14 Feb 2025<br>
+          Created: Today, 11:30 · By James Davies
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ S01 GLOBAL NAV ═══ -->
+<div class="page" id="s01">
+  <div class="page-header"><div class="ph-badge gray" style="background:var(--s2);color:var(--tx3);border-color:var(--bdrm)">Shared Pattern S01</div><div class="ph-title">Global Navigation Shell</div><div class="ph-sub">The navigation layout used across all authenticated pages.</div></div>
+  <div class="card">
+    <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Pattern documentation</div>
+    <div class="grid-2" style="font-size:11px;line-height:1.7">
+      <div>
+        <p style="margin-bottom:8px"><strong>Top bar</strong> — fixed height 52px. Logo, breadcrumbs, mode badge, avatar. Sticky on scroll.</p>
+        <p style="margin-bottom:8px"><strong>Left nav</strong> — 200px wide. Sections with labels. Active state: coral left border + coral-l background.</p>
+        <p style="margin-bottom:8px"><strong>Breadcrumbs</strong> — current section shown in top bar. Full path for deep pages.</p>
+      </div>
+      <div>
+        <p style="margin-bottom:8px"><strong>Badges</strong> — numeric counts on nav items (e.g. unread notifications, pending items).</p>
+        <p style="margin-bottom:8px"><strong>Responsive</strong> — left nav collapses to icon-only at &lt;900px, hidden at &lt;600px with hamburger.</p>
+        <p><strong>Modes</strong> — Originator Portal (coral badge), Customer Portal (green), Admin (purple).</p>
+      </div>
+    </div>
+  </div>
+  <div class="info-banner blue"><span style="font-size:16px">ℹ</span><div style="font-size:11px;color:var(--blue)"><strong>Implementation note:</strong> This demo uses the navigation shell on every page. In production, the shell wraps all authenticated routes. The left nav items are role-filtered based on the logged-in user's permissions.</div></div>
+</div>
+
+<!-- ═══════════════════════════════════════ S02 ERROR STATES ═══ -->
+<div class="page" id="s02">
+  <div class="page-header"><div class="ph-badge gray" style="background:var(--s2);color:var(--tx3);border-color:var(--bdrm)">Shared Pattern S02</div><div class="ph-title">Empty &amp; Error States</div><div class="ph-sub">Graceful handling of edge cases across all pages.</div></div>
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Empty state — no results</div>
+        <div style="text-align:center;padding:32px 20px">
+          <div style="font-size:36px;margin-bottom:12px">📭</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:6px">No contracts found</div>
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:16px">Try adjusting your filters or search term.</div>
+          <button class="btn btn-ghost btn-sm" onclick="showToast('Filters cleared')">Clear filters</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">403 — No permission</div>
+        <div style="text-align:center;padding:32px 20px">
+          <div style="font-size:36px;margin-bottom:12px">🔒</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:6px">Access restricted</div>
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:16px">You don't have permission to view this page. Contact your account administrator.</div>
+          <button class="btn btn-ghost btn-sm" onclick="nav('p10')">← Go back</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">API error state</div>
+        <div class="info-banner red">
+          <span style="font-size:16px">⚠</span>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:3px">Unable to load portfolio data</div>
+            <div style="font-size:11px;color:var(--tx2);margin-bottom:8px">There was a problem connecting to the server. Your data is safe — please try again.</div>
+            <button class="btn btn-sm" style="background:var(--red);color:#fff;border:none" onclick="showToast('Retrying request…')">↺ Retry</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">404 — Page not found</div>
+        <div style="text-align:center;padding:24px 20px">
+          <div style="font-size:36px;font-family:'DM Mono',monospace;font-weight:700;color:var(--bdrm);margin-bottom:10px">404</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:6px">Page not found</div>
+          <div style="font-size:12px;color:var(--tx3);margin-bottom:16px">The page you're looking for doesn't exist or has been moved.</div>
+          <button class="btn btn-primary btn-sm" onclick="nav('p10')">Go to dashboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ S03 TOASTS & ALERTS ═══ -->
+<div class="page" id="s03">
+  <div class="page-header"><div class="ph-badge gray" style="background:var(--s2);color:var(--tx3);border-color:var(--bdrm)">Shared Pattern S03</div><div class="ph-title">Notifications &amp; Toasts</div><div class="ph-sub">System feedback patterns used across all pages.</div></div>
+  <div class="card">
+    <div class="card-title">Toast notifications — click to trigger</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" style="background:var(--green);color:#fff" onclick="showToast('✓ Deal submitted successfully — Ref RC-2025-08741')">Success toast</button>
+      <button class="btn" style="background:var(--amber);color:#fff" onclick="showToast('⚠ Your session expires in 5 minutes')">Warning toast</button>
+      <button class="btn" style="background:var(--red);color:#fff" onclick="showToast('✕ Upload failed — file too large (max 20 MB)')">Error toast</button>
+      <button class="btn btn-ghost" onclick="showToast('ℹ Deal RC-2025-08741 is pending credit review')">Info toast</button>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Inline banners</div>
+      <div class="info-banner green" style="margin-bottom:10px"><span>✅</span><div style="font-size:11px;color:var(--green-d)"><strong>Application approved.</strong> Your deal has been accepted and will commence on 14 Feb 2025.</div></div>
+      <div class="info-banner amber" style="margin-bottom:10px"><span>⚠</span><div style="font-size:11px;color:var(--amber)"><strong>Action required.</strong> Director ID check failed. Please resubmit a clearer scan.</div></div>
+      <div class="info-banner red" style="margin-bottom:10px"><span>✕</span><div style="font-size:11px;color:var(--red)"><strong>Application rejected.</strong> Please review the reason below and contact support.</div></div>
+      <div class="info-banner blue"><span>ℹ</span><div style="font-size:11px;color:var(--blue)"><strong>Checks in progress.</strong> 4 of 7 automated checks complete. Estimated: 2 hours.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Design tokens</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;background:var(--green);border-radius:4px"></div><div style="font-size:11px"><span style="font-family:'DM Mono',monospace">--green: #2C7A4B</span> · Success</div></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;background:var(--amber);border-radius:4px"></div><div style="font-size:11px"><span style="font-family:'DM Mono',monospace">--amber: #A86410</span> · Warning</div></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;background:var(--red);border-radius:4px"></div><div style="font-size:11px"><span style="font-family:'DM Mono',monospace">--red: #C0372A</span> · Error</div></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;background:var(--blue);border-radius:4px"></div><div style="font-size:11px"><span style="font-family:'DM Mono',monospace">--blue: #1A5FA8</span> · Info</div></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;background:var(--coral);border-radius:4px"></div><div style="font-size:11px"><span style="font-family:'DM Mono',monospace">--coral: #BF4528</span> · Brand / CTA</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content-area -->
+</div><!-- /app-shell -->
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Confirm</div>
+    <div class="modal-desc" id="modalDesc">Are you sure?</div>
+    <div class="modal-field" id="modalField" style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px" id="modalFieldLabel">Note</div>
+      <textarea class="form-textarea" id="modalInput" rows="3" placeholder="Add a note…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn" id="modalConfirm" onclick="confirmModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+var currentPage = 'p10';
+var modalType = '';
+
+/* ── NAVIGATION ── */
+var crumbMap = {
+  p01:'Registration',p02:'Document Upload',p03:'Verification Status',
+  p04:'Admin Review Queue',p05:'Welcome & Activation',
+  p06:'New Deal',p07:'Asset & Financial Details',p08:'Review & Submit',p09:'Deal Confirmation',
+  p10:'Portfolio Dashboard',p11:'View Configurator',p12:'Asset Detail',p13:'Export & Reports',
+  p14:'Customer Login',p15:'My Dashboard',p16:'Account Actions',p17:'Notifications',
+  p18:'Prospect List',p19:'Prospect Profile',p20:'Qualify / Convert',
+  p21:'Quote Builder',p22:'Quote Output',
+  s01:'Global Nav Shell',s02:'Error States',s03:'Toasts & Alerts'
+};
+var sectionMap = {
+  p01:'Onboarding',p02:'Onboarding',p03:'Onboarding',p04:'Onboarding',p05:'Onboarding',
+  p06:'Deal Capture',p07:'Deal Capture',p08:'Deal Capture',p09:'Deal Capture',
+  p10:'Portfolio',p11:'Portfolio',p12:'Portfolio',p13:'Portfolio',
+  p14:'Customer Portal',p15:'Customer Portal',p16:'Customer Portal',p17:'Customer Portal',
+  p18:'CRM',p19:'CRM',p20:'CRM',p21:'Quotes',p22:'Quotes',
+  s01:'Shared',s02:'Shared',s03:'Shared'
+};
+
+function nav(page) {
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  var el = document.getElementById(page);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.ln-item').forEach(function(i){
+    i.classList.remove('active');
+    if(i.getAttribute('data-page')===page) i.classList.add('active');
+  });
+  var sec = sectionMap[page]||'';
+  var name = crumbMap[page]||page.toUpperCase();
+  document.getElementById('navCrumbs').innerHTML = sec
+    ? '<span>'+sec+'</span><span class="sep">/</span><span class="cur">'+name+'</span>'
+    : '<span class="cur">'+name+'</span>';
+  document.getElementById('contentArea').scrollTop = 0;
+  currentPage = page;
+  // mode badge
+  var mb = document.getElementById('modeBadge');
+  if(['p04'].includes(page)){mb.textContent='Admin Portal';mb.className='nav-mode-badge admin';}
+  else if(['p14','p15','p16','p17'].includes(page)){mb.textContent='Customer Portal';mb.className='nav-mode-badge';mb.style.background='var(--green-l)';mb.style.color='var(--green-d)';mb.style.borderColor='var(--green-m)';}
+  else{mb.textContent='Originator Portal';mb.className='nav-mode-badge customer';}
+}
+
+/* ── LIVE CALC ── */
+function calcPayment() {
+  var v = parseFloat(document.getElementById('assetVal').value)||42000;
+  var d = parseFloat(document.getElementById('depositVal').value)||0;
+  var t = parseInt(document.getElementById('termSel').value)||36;
+  var b = parseFloat(document.getElementById('balloonVal').value)||0;
+  var financed = v - d - b;
+  var monthly = (financed * 0.072/12) / (1 - Math.pow(1+0.072/12,-t));
+  document.getElementById('calcResult').textContent = '£'+Math.round(monthly).toLocaleString()+'/mo';
+  document.getElementById('calcMeta').textContent = t+' months · 7.2% APR · Total: £'+Math.round(monthly*t).toLocaleString();
+}
+function calcQuote() {
+  var v = parseFloat(document.getElementById('qAssetVal').value)||64000;
+  var d = parseFloat(document.getElementById('qDeposit').value)||0;
+  var t = parseInt(document.getElementById('qTerm').value)||48;
+  var financed = v - d;
+  var monthly = (financed * 0.072/12) / (1 - Math.pow(1+0.072/12,-t));
+  document.getElementById('qCalcResult').textContent = '£'+Math.round(monthly).toLocaleString()+'/mo';
+  document.getElementById('qCalcMeta').textContent = t+' months · 7.2% APR · Total: £'+Math.round(monthly*t).toLocaleString();
+}
+
+/* ── SCENARIO TABS ── */
+function switchScenario(n, btn) {
+  document.querySelectorAll('.scenario-tab').forEach(function(t){t.classList.remove('active')});
+  btn.classList.add('active');
+  var sB = document.getElementById('scenBCard');
+  if(sB) sB.style.display = n===2 ? 'block' : 'none';
+  if(n===2) showToast('Scenario B: 60 months · £1,166/mo');
+}
+function switchAssetTab(tab, btn) {
+  ['payments','docs','activity'].forEach(function(t){
+    var el=document.getElementById('at-'+t);
+    if(el) el.style.display='none';
+  });
+  var el=document.getElementById('at-'+tab);
+  if(el) el.style.display='block';
+  document.querySelectorAll('.scenario-tab').forEach(function(t){t.classList.remove('active')});
+  btn.classList.add('active');
+}
+
+/* ── COLUMN TOGGLES ── */
+function toggleCol(row) {
+  var box = row.querySelector('div');
+  var isChecked = box.style.background === 'var(--coral)' || box.style.background === 'rgb(191, 69, 40)';
+  if(isChecked){box.style.background='transparent';box.style.borderColor='var(--bdrm)';box.textContent='';}
+  else{box.style.background='var(--coral)';box.style.borderColor='var(--coral)';box.style.color='#fff';box.textContent='✓';}
+}
+
+/* ── FIRST STEPS ── */
+function tickStep(row) {
+  row.classList.toggle('done');
+  var box = row.querySelector('div');
+  if(row.classList.contains('done')){
+    box.style.background='var(--green)';box.style.borderColor='var(--green)';box.style.color='#fff';box.textContent='✓';
+    row.querySelector('[style*="font-size:12px"]') && (row.querySelectorAll('div')[1].style.textDecoration='line-through');
+  } else {
+    box.style.background='transparent';box.style.borderColor='var(--bdrm)';box.textContent='';
+    row.querySelector('[style*="font-size:12px"]') && (row.querySelectorAll('div')[1].style.textDecoration='');
+  }
+}
+
+/* ── NOTIFICATIONS ── */
+function readNotif(item) { item.classList.remove('unread'); item.querySelector('.notif-dot').classList.add('read'); }
+function markAllRead() { document.querySelectorAll('.notif-item').forEach(function(i){i.classList.remove('unread');i.querySelector('.notif-dot').classList.add('read');}); showToast('All notifications marked as read'); }
+
+/* ── MODAL ── */
+function openModal(type) {
+  modalType = type;
+  var bg = document.getElementById('modalBg');
+  var t = document.getElementById('modalTitle');
+  var d = document.getElementById('modalDesc');
+  var f = document.getElementById('modalField');
+  var c = document.getElementById('modalConfirm');
+  if(type==='approve'){t.textContent='Approve application';d.textContent='Approve Acme Finance Ltd as an originator? This will send activation credentials.';f.style.display='block';c.style.background='var(--green)';c.style.color='#fff';c.textContent='✓ Approve';}
+  else if(type==='reject'){t.textContent='Reject application';d.textContent='Reject the application from Acme Finance Ltd? A notification will be sent with your reason.';f.style.display='block';c.style.background='var(--red)';c.style.color='#fff';c.textContent='✕ Reject';}
+  else{t.textContent='Request information';d.textContent='Send an information request to james@acmefinance.co.uk. The SLA clock will pause until they respond.';f.style.display='none';c.style.background='var(--blue)';c.style.color='#fff';c.textContent='✉ Send request';}
+  bg.classList.add('show');
+}
+function closeModal(e) { if(!e||e.target===document.getElementById('modalBg')) document.getElementById('modalBg').classList.remove('show'); }
+function confirmModal() {
+  document.getElementById('modalBg').classList.remove('show');
+  if(modalType==='approve'){showToast('✓ Application approved — activation email sent');nav('p05');fireConfetti();}
+  else if(modalType==='reject') showToast('✕ Application rejected — notification sent');
+  else showToast('✉ Information request sent to applicant');
+}
+
+/* ── CONFETTI ── */
+function fireConfetti() {
+  var wrap = document.getElementById('confWrap');
+  var colors = ['#BF4528','#2C7A4B','#1A5FA8','#A86410','#F2C0AC','#A3D4B4'];
+  for(var i=0;i<50;i++){
+    var c=document.createElement('div');
+    c.className='conf';
+    c.style.cssText='left:'+Math.random()*100+'vw;background:'+colors[Math.floor(Math.random()*colors.length)]+';animation-duration:'+(1.5+Math.random()*2)+'s;animation-delay:'+(Math.random()*.8)+'s;width:'+(6+Math.random()*8)+'px;height:'+(6+Math.random()*8)+'px;border-radius:'+(Math.random()>.5?'50%':'2px');
+    wrap.appendChild(c);
+    setTimeout(function(el){el.remove()},4000,c);
+  }
+}
+
+/* ── TOAST ── */
+function showToast(msg) {
+  var el = document.getElementById('toastEl');
+  el.textContent=msg; el.classList.add('on');
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){el.classList.remove('on')},2800);
+}
+
+/* ── INIT ── */
+nav('p10');
+</script>
+</body>
+</html>
+HTMLEOF
