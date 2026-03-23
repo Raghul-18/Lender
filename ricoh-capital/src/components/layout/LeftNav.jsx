@@ -2,7 +2,8 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Plus, FileText, Users, Bell,
   ClipboardList, FolderOpen, ShieldCheck,
-  ClipboardCheck, ScrollText, Home,
+  ClipboardCheck, ScrollText, Home, Send,
+  Settings, Download, BarChart3, CreditCard,
 } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { ZoroWordmark } from '../shared/ZoroLogo';
@@ -13,14 +14,16 @@ const ORIGINATOR_NAV = [
   {
     section: 'Overview',
     items: [
-      { to: '/portfolio',  icon: <LayoutDashboard size={ICON_SIZE} />, label: 'Portfolio' },
+      { to: '/portfolio',        icon: <LayoutDashboard size={ICON_SIZE} />, label: 'Portfolio' },
+      { to: '/portfolio/export', icon: <Download size={ICON_SIZE} />,        label: 'Export data' },
     ],
   },
   {
     section: 'Deals',
     items: [
-      { to: '/deals/new',  icon: <Plus size={ICON_SIZE} />,      label: 'New deal' },
-      { to: '/quotes',     icon: <FileText size={ICON_SIZE} />,   label: 'Quotes' },
+      { to: '/deals',     icon: <Send size={ICON_SIZE} />,      label: 'My deals' },
+      { to: '/deals/new', icon: <Plus size={ICON_SIZE} />,      label: 'New deal' },
+      { to: '/quotes',    icon: <FileText size={ICON_SIZE} />,  label: 'Quotes' },
     ],
   },
   {
@@ -32,17 +35,31 @@ const ORIGINATOR_NAV = [
   {
     section: 'Account',
     items: [
-      { to: '/notifications', icon: <Bell size={ICON_SIZE} />, label: 'Notifications' },
+      { to: '/notifications', icon: <Bell size={ICON_SIZE} />,     label: 'Notifications' },
+      { to: '/settings',      icon: <Settings size={ICON_SIZE} />, label: 'Settings' },
     ],
   },
 ];
 
 const ADMIN_NAV = [
   {
-    section: 'Admin',
+    section: 'Overview',
     items: [
-      { to: '/admin/review', icon: <ClipboardCheck size={ICON_SIZE} />, label: 'Review queue' },
-      { to: '/admin/audit',  icon: <ScrollText size={ICON_SIZE} />,     label: 'Audit log' },
+      { to: '/admin',        icon: <BarChart3 size={ICON_SIZE} />,     label: 'Dashboard' },
+    ],
+  },
+  {
+    section: 'Queues',
+    items: [
+      { to: '/admin/review', icon: <ClipboardCheck size={ICON_SIZE} />, label: 'Applications' },
+      { to: '/admin/deals',  icon: <Send size={ICON_SIZE} />,           label: 'Deal queue' },
+    ],
+  },
+  {
+    section: 'System',
+    items: [
+      { to: '/admin/audit',  icon: <ScrollText size={ICON_SIZE} />,    label: 'Audit log' },
+      { to: '/settings',     icon: <Settings size={ICON_SIZE} />,      label: 'Settings' },
     ],
   },
 ];
@@ -51,8 +68,10 @@ const CUSTOMER_NAV = [
   {
     section: 'My account',
     items: [
-      { to: '/portal/dashboard',     icon: <Home size={ICON_SIZE} />, label: 'Dashboard' },
-      { to: '/portal/notifications', icon: <Bell size={ICON_SIZE} />, label: 'Notifications' },
+      { to: '/portal/dashboard',     icon: <Home size={ICON_SIZE} />,       label: 'Dashboard' },
+      { to: '/portal/account',       icon: <CreditCard size={ICON_SIZE} />, label: 'Account actions' },
+      { to: '/portal/notifications', icon: <Bell size={ICON_SIZE} />,       label: 'Notifications' },
+      { to: '/settings',             icon: <Settings size={ICON_SIZE} />,   label: 'Settings' },
     ],
   },
 ];

@@ -19,12 +19,20 @@ const BREADCRUMBS = {
   '/onboarding/documents':     ['Onboarding', 'Documents'],
   '/onboarding/verification':  ['Onboarding', 'Verification'],
   '/onboarding/welcome':       ['Onboarding', 'Welcome'],
-  '/admin/review':             ['Admin', 'Review queue'],
+  '/admin':                    ['Admin', 'Dashboard'],
+  '/admin/review':             ['Admin', 'Applications'],
+  '/admin/deals':              ['Admin', 'Deal queue'],
   '/admin/audit':              ['Admin', 'Audit log'],
   '/portal/dashboard':         ['Customer portal'],
   '/portal/contracts/:id':     ['Customer portal', 'Contract detail'],
+  '/portal/account':           ['Customer portal', 'Account actions'],
   '/portal/notifications':     ['Notifications'],
   '/notifications':            ['Notifications'],
+  '/deals':                    ['Deals', 'My deals'],
+  '/deals/:id':                ['Deals', 'Deal detail'],
+  '/portfolio/export':         ['Portfolio', 'Export data'],
+  '/crm/:id/convert':          ['CRM', 'Convert to deal'],
+  '/settings':                 ['Settings'],
 };
 
 const ROLE_BADGES = {

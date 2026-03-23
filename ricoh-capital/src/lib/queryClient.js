@@ -34,4 +34,7 @@ export const keys = {
   quote: (id) => ['quote', id],
   notifications: (userId) => ['notifications', userId],
   customerContracts: (customerId) => ['customer', 'contracts', customerId],
+  adminDeals: () => ['admin', 'deals'],
+  adminStats: () => ['admin', 'stats'],
+  auditLogs: () => ['admin', 'auditLogs'],
 };

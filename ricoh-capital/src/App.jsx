@@ -19,12 +19,17 @@ import P05Welcome from './pages/onboarding/P05Welcome';
 
 // Admin
 import P04AdminReview from './pages/admin/P04AdminReview';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminDealQueue from './pages/admin/AdminDealQueue';
 
 // Portfolio
 import P10PortfolioDashboard from './pages/portfolio/P10PortfolioDashboard';
 import P12AssetDetail from './pages/portfolio/P12AssetDetail';
+import P13Export from './pages/portfolio/P13Export';
 
 // Deals
+import MyDealsPage from './pages/deals/MyDealsPage';
+import DealDetailPage from './pages/deals/DealDetailPage';
 import P06DealInitiation from './pages/deals/P06DealInitiation';
 import P07AssetDetails from './pages/deals/P07AssetDetails';
 import P08ReviewSubmit from './pages/deals/P08ReviewSubmit';
@@ -34,6 +39,7 @@ import P09Confirmation from './pages/deals/P09Confirmation';
 import P18ProspectList from './pages/crm/P18ProspectList';
 import P19ProspectProfile from './pages/crm/P19ProspectProfile';
 import ProspectForm from './pages/crm/ProspectForm';
+import P20QualifyConvert from './pages/crm/P20QualifyConvert';
 
 // Quotes
 import P21QuoteBuilder from './pages/quotes/P21QuoteBuilder';
@@ -45,6 +51,10 @@ import P17Notifications from './pages/notifications/P17Notifications';
 
 // Customer portal
 import P15CustomerDashboard from './pages/selfservice/P15CustomerDashboard';
+import P16AccountActions from './pages/selfservice/P16AccountActions';
+
+// Settings
+import SettingsPage from './pages/settings/SettingsPage';
 
 export default function App() {
   return (
@@ -90,9 +100,19 @@ export default function App() {
                 } />
 
                 {/* ── Admin routes ── */}
+                <Route path="/admin" element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
                 <Route path="/admin/review" element={
                   <ProtectedRoute roles={['admin']}>
                     <P04AdminReview />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/deals" element={
+                  <ProtectedRoute roles={['admin']}>
+                    <AdminDealQueue />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/audit" element={
@@ -113,12 +133,23 @@ export default function App() {
                     <P10PortfolioDashboard />
                   </ProtectedRoute>
                 } />
+                <Route path="/portfolio/export" element={
+                  <ProtectedRoute roles={['originator']} requireApproved>
+                    <P13Export />
+                  </ProtectedRoute>
+                } />
                 <Route path="/portfolio/:id" element={
                   <ProtectedRoute roles={['originator', 'admin']} requireApproved>
                     <P12AssetDetail />
                   </ProtectedRoute>
                 } />
 
+                {/* My deals list — specific wizard routes BEFORE :id */}
+                <Route path="/deals" element={
+                  <ProtectedRoute roles={['originator']} requireApproved>
+                    <MyDealsPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="/deals/new" element={
                   <ProtectedRoute roles={['originator']} requireApproved>
                     <P06DealInitiation />
@@ -137,6 +168,11 @@ export default function App() {
                 <Route path="/deals/confirmation" element={
                   <ProtectedRoute roles={['originator']} requireApproved>
                     <P09Confirmation />
+                  </ProtectedRoute>
+                } />
+                <Route path="/deals/:id" element={
+                  <ProtectedRoute roles={['originator']} requireApproved>
+                    <DealDetailPage />
                   </ProtectedRoute>
                 } />
 
@@ -158,6 +194,11 @@ export default function App() {
                 <Route path="/crm/:id/edit" element={
                   <ProtectedRoute roles={['originator']} requireApproved>
                     <ProspectForm />
+                  </ProtectedRoute>
+                } />
+                <Route path="/crm/:id/convert" element={
+                  <ProtectedRoute roles={['originator']} requireApproved>
+                    <P20QualifyConvert />
                   </ProtectedRoute>
                 } />
 
@@ -194,9 +235,21 @@ export default function App() {
                     <P12AssetDetail />
                   </ProtectedRoute>
                 } />
+                <Route path="/portal/account" element={
+                  <ProtectedRoute roles={['customer']}>
+                    <P16AccountActions />
+                  </ProtectedRoute>
+                } />
                 <Route path="/portal/notifications" element={
                   <ProtectedRoute roles={['customer']}>
                     <P17Notifications />
+                  </ProtectedRoute>
+                } />
+
+                {/* ── Settings (all roles) ── */}
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <SettingsPage />
                   </ProtectedRoute>
                 } />
               </Route>

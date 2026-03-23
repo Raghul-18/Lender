@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Phone, Mail, MessageSquare, FileText, CheckCircle, ArrowLeftRight, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Phone, Mail, MessageSquare, FileText, CheckCircle, ArrowLeftRight, Edit, Trash2, ArrowRight } from 'lucide-react';
 import { useProspect, useProspectActivities, useCreateActivity, useUpdateProspect, useDeleteProspect } from '../../hooks/useProspects';
 import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
@@ -83,10 +83,13 @@ export default function P19ProspectProfile() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={() => navigate(`/crm/${id}/convert`)}>
+            <ArrowRight size={13} /> Convert to deal
+          </button>
           <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => navigate(`/crm/${id}/edit`)}>
             <Edit size={13} /> Edit
           </button>
-          <button className="btn btn-danger" style={{ fontSize: 12 }} onClick={handleDelete}>
+          <button className="btn btn-ghost" style={{ fontSize: 12, color: 'var(--red)', border: '1px solid var(--red-m)' }} onClick={handleDelete}>
             <Trash2 size={13} /> Delete
           </button>
         </div>

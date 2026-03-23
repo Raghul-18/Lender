@@ -92,6 +92,160 @@ export function useSubmitDeal() {
   });
 }
 
+// ── Admin: view all submitted deals ──────────────────────────
+export function useAllDeals(statusFilter = null) {
+  return useQuery({
+    queryKey: [...keys.adminDeals(), statusFilter],
+    queryFn: async () => {
+      let q = db.deals()
+        .select('*, originator:originator_id(id, full_name, company_name, email)')
+        .order('created_at', { ascending: false });
+      if (statusFilter) q = q.eq('status', statusFilter);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ── Admin: approve a deal → creates a contract ───────────────
+export function useApproveDeal() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ dealId, adminNotes, startDate }) => {
+      // 1. Fetch the deal
+      const { data: deal, error: dealErr } = await db.deals()
+        .select('*')
+        .eq('id', dealId)
+        .single();
+      if (dealErr) throw dealErr;
+
+      // 2. Mark deal approved
+      const { error: updateErr } = await db.deals()
+        .update({
+          status: 'approved',
+          admin_notes: adminNotes || null,
+          reviewed_by: user.id,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', dealId);
+      if (updateErr) throw updateErr;
+
+      // 3. Calculate dates
+      const start = startDate ? new Date(startDate) : new Date();
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + (deal.term_months || 36));
+      const nextPayment = new Date(start);
+      nextPayment.setMonth(nextPayment.getMonth() + 1);
+
+      // 4. Create the contract
+      const { data: contract, error: contractErr } = await db.contracts()
+        .insert({
+          deal_id: deal.id,
+          originator_id: deal.originator_id,
+          customer_name: deal.customer_name,
+          asset_description: `${deal.asset_year || ''} ${deal.asset_make || ''} ${deal.asset_model || ''}`.trim() || deal.asset_type,
+          asset_value: deal.asset_value,
+          monthly_payment: deal.monthly_payment,
+          term_months: deal.term_months,
+          start_date: start.toISOString().slice(0, 10),
+          end_date: end.toISOString().slice(0, 10),
+          next_payment_date: nextPayment.toISOString().slice(0, 10),
+          status: 'active',
+        })
+        .select()
+        .single();
+      if (contractErr) throw contractErr;
+
+      // 5. Generate payment schedule
+      const schedule = Array.from({ length: deal.term_months || 36 }, (_, i) => {
+        const dueDate = new Date(start);
+        dueDate.setMonth(dueDate.getMonth() + i + 1);
+        return {
+          contract_id: contract.id,
+          payment_number: i + 1,
+          due_date: dueDate.toISOString().slice(0, 10),
+          amount: deal.monthly_payment || 0,
+          status: 'upcoming',
+        };
+      });
+      if (schedule.length) {
+        const { error: schedErr } = await db.paymentSchedule().insert(schedule);
+        if (schedErr) throw schedErr;
+      }
+
+      // 6. Notify originator
+      await db.notifications().insert({
+        user_id: deal.originator_id,
+        title: `Deal approved — ${deal.reference_number}`,
+        body: `${deal.customer_name} · ${deal.product_type} · Contract ${contract.reference_number} is now active.`,
+        type: 'deal_update',
+        related_id: contract.id,
+      });
+
+      await logAudit('deal', dealId, 'approved', { contract_id: contract.id, reviewed_by: user.id });
+      return { deal, contract };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.adminDeals() });
+      qc.invalidateQueries({ queryKey: ['contracts'] });
+    },
+  });
+}
+
+// ── Admin: reject a deal ──────────────────────────────────────
+export function useRejectDeal() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ dealId, adminNotes }) => {
+      const { data: deal, error: dealErr } = await db.deals()
+        .select('originator_id, reference_number, customer_name, product_type')
+        .eq('id', dealId)
+        .single();
+      if (dealErr) throw dealErr;
+
+      const { error } = await db.deals()
+        .update({
+          status: 'rejected',
+          admin_notes: adminNotes || null,
+          reviewed_by: user.id,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', dealId);
+      if (error) throw error;
+
+      await db.notifications().insert({
+        user_id: deal.originator_id,
+        title: `Deal not approved — ${deal.reference_number}`,
+        body: adminNotes
+          ? `${deal.customer_name} · ${deal.product_type}. Reason: ${adminNotes}`
+          : `${deal.customer_name} · ${deal.product_type} was not approved at this time.`,
+        type: 'deal_update',
+        related_id: dealId,
+      });
+
+      await logAudit('deal', dealId, 'rejected', { reviewed_by: user.id, notes: adminNotes });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.adminDeals() }),
+  });
+}
+
+// ── Admin: move deal back to under_review ────────────────────
+export function useSetDealUnderReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (dealId) => {
+      const { error } = await db.deals().update({ status: 'under_review' }).eq('id', dealId);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.adminDeals() }),
+  });
+}
+
 export function useSaveDealDraft() {
   const { user } = useAuth();
   const qc = useQueryClient();
