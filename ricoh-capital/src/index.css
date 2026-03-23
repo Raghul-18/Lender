@@ -77,14 +77,36 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: width 200ms ease;
+}
+.leftnav-collapsed {
+  width: 52px;
 }
 .leftnav-logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 16px 16px 12px;
+  gap: 8px;
+  padding: 14px 10px 12px 14px;
   border-bottom: 1px solid var(--bdr);
   flex-shrink: 0;
+}
+.nav-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r);
+  border: none;
+  background: transparent;
+  color: var(--tx4);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 150ms, color 150ms;
+}
+.nav-collapse-btn:hover {
+  background: var(--s2);
+  color: var(--tx2);
 }
 .nav-section {
   padding: 8px 0 4px;
@@ -125,6 +147,23 @@ input, select, textarea { font-family: inherit; }
   width: 3px;
   background: var(--coral);
   border-radius: 0 2px 2px 0;
+}
+/* Collapsed state — icon only, centred */
+.nav-item-collapsed {
+  justify-content: center;
+  padding: 8px 0;
+  gap: 0;
+}
+.nav-item-collapsed .nav-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--rs);
+}
+.nav-item-collapsed:hover .nav-icon {
+  background: var(--s2);
+}
+.nav-item-collapsed.active .nav-icon {
+  background: var(--coral-l);
 }
 .nav-icon {
   width: 20px;

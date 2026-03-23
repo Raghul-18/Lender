@@ -1,5 +1,4 @@
 -- ── DEAL AMENDMENTS ─────────────────────────────────────────
--- Customers / originators can request changes to approved deal terms.
 create table if not exists public.deal_amendments (
   id              uuid primary key default gen_random_uuid(),
   deal_id         uuid references public.deals(id) on delete cascade not null,
@@ -19,13 +18,18 @@ create table if not exists public.deal_amendments (
   updated_at      timestamptz default now()
 );
 
+drop trigger if exists handle_updated_at on public.deal_amendments;
 create trigger handle_updated_at before update on public.deal_amendments
   for each row execute procedure public.handle_updated_at();
 
--- RLS
 alter table public.deal_amendments enable row level security;
 
--- Originators can see amendments for their own deals
+-- Drop all policies first so we can recreate idempotently
+drop policy if exists "Originators can view their deal amendments"  on public.deal_amendments;
+drop policy if exists "Originators can create deal amendments"      on public.deal_amendments;
+drop policy if exists "Admins can view all deal amendments"         on public.deal_amendments;
+drop policy if exists "Admins can update deal amendments"           on public.deal_amendments;
+
 create policy "Originators can view their deal amendments"
   on public.deal_amendments for select
   using (
@@ -35,7 +39,6 @@ create policy "Originators can view their deal amendments"
     )
   );
 
--- Originators can create amendments for their own deals
 create policy "Originators can create deal amendments"
   on public.deal_amendments for insert
   with check (
@@ -46,12 +49,10 @@ create policy "Originators can create deal amendments"
     )
   );
 
--- Admins can view all amendments
 create policy "Admins can view all deal amendments"
   on public.deal_amendments for select
   using (current_user_role() = 'admin');
 
--- Admins can update (approve/reject) amendments
 create policy "Admins can update deal amendments"
   on public.deal_amendments for update
   using (current_user_role() = 'admin');

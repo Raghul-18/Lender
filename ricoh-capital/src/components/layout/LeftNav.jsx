@@ -4,9 +4,10 @@ import {
   ClipboardList, FolderOpen, ShieldCheck,
   ClipboardCheck, ScrollText, Home, Send,
   Settings, Download, BarChart3, CreditCard, UserCog,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
-import { ZoroWordmark } from '../shared/ZoroLogo';
+import { ZoroWordmark, ZoroMark } from '../shared/ZoroLogo';
 
 const ICON_SIZE = 15;
 
@@ -45,7 +46,7 @@ const ADMIN_NAV = [
   {
     section: 'Overview',
     items: [
-      { to: '/admin',        icon: <BarChart3 size={ICON_SIZE} />,     label: 'Dashboard' },
+      { to: '/admin', icon: <BarChart3 size={ICON_SIZE} />, label: 'Dashboard' },
     ],
   },
   {
@@ -58,9 +59,9 @@ const ADMIN_NAV = [
   {
     section: 'System',
     items: [
-      { to: '/admin/users',  icon: <UserCog size={ICON_SIZE} />,       label: 'User management' },
-      { to: '/admin/audit',  icon: <ScrollText size={ICON_SIZE} />,    label: 'Audit log' },
-      { to: '/settings',     icon: <Settings size={ICON_SIZE} />,      label: 'Settings' },
+      { to: '/admin/users',  icon: <UserCog size={ICON_SIZE} />,    label: 'User management' },
+      { to: '/admin/audit',  icon: <ScrollText size={ICON_SIZE} />, label: 'Audit log' },
+      { to: '/settings',     icon: <Settings size={ICON_SIZE} />,   label: 'Settings' },
     ],
   },
 ];
@@ -88,37 +89,56 @@ const ONBOARDING_NAV = [
   },
 ];
 
-export default function LeftNav() {
+export default function LeftNav({ collapsed, onToggle }) {
   const { profile, isAdmin, isOriginator, isCustomer, isApproved } = useAuth();
 
   let navSections;
-  if (isAdmin)                        navSections = ADMIN_NAV;
-  else if (isCustomer)                navSections = CUSTOMER_NAV;
+  if (isAdmin)                         navSections = ADMIN_NAV;
+  else if (isCustomer)                 navSections = CUSTOMER_NAV;
   else if (isOriginator && isApproved) navSections = ORIGINATOR_NAV;
-  else if (isOriginator)              navSections = ONBOARDING_NAV;
-  else                                navSections = [];
+  else if (isOriginator)               navSections = ONBOARDING_NAV;
+  else                                 navSections = [];
+
+  const initials = profile?.avatar_initials || profile?.full_name?.[0] || '?';
 
   return (
-    <div className="leftnav">
-      {/* Brand */}
+    <div className={`leftnav${collapsed ? ' leftnav-collapsed' : ''}`}>
+
+      {/* Logo + toggle */}
       <div className="leftnav-logo">
-        <ZoroWordmark size={28} gap={9} fontSize={14} />
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+          {collapsed
+            ? <ZoroMark size={26} />
+            : <ZoroWordmark size={28} gap={9} fontSize={14} />
+          }
+        </div>
+        <button
+          onClick={onToggle}
+          className="nav-collapse-btn"
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
       </div>
 
       {/* Nav sections */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 8 }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 8 }}>
         {navSections.map(section => (
           <div key={section.section} className="nav-section">
-            <div className="nav-section-label">{section.section}</div>
+            {!collapsed && (
+              <div className="nav-section-label">{section.section}</div>
+            )}
+            {collapsed && <div style={{ height: 8 }} />}
             {section.items.map(item => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={['/portfolio', '/crm', '/portal/dashboard'].includes(item.to)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                className={({ isActive }) => `nav-item${collapsed ? ' nav-item-collapsed' : ''}${isActive ? ' active' : ''}`}
+                title={collapsed ? item.label : undefined}
               >
                 <span className="nav-icon">{item.icon}</span>
-                <span>{item.label}</span>
+                {!collapsed && <span>{item.label}</span>}
               </NavLink>
             ))}
           </div>
@@ -126,12 +146,37 @@ export default function LeftNav() {
       </div>
 
       {/* User info */}
-      <div style={{ padding: '12px 14px', borderTop: '1px solid var(--bdr)', fontSize: 11 }}>
-        <div style={{ fontWeight: 600, color: 'var(--tx2)', marginBottom: 2 }}>{profile?.full_name || '—'}</div>
-        <div style={{ color: 'var(--tx4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {profile?.company_name || profile?.email}
+      {collapsed ? (
+        <div style={{ padding: '12px 0', borderTop: '1px solid var(--bdr)', display: 'flex', justifyContent: 'center' }} title={profile?.full_name || profile?.email}>
+          <div style={{
+            width: 28, height: 28, borderRadius: '50%',
+            background: 'var(--coral-l)', color: 'var(--coral)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 10, fontWeight: 700,
+          }}>
+            {initials}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ padding: '12px 14px', borderTop: '1px solid var(--bdr)', fontSize: 11, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+            background: 'var(--coral-l)', color: 'var(--coral)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 10, fontWeight: 700,
+          }}>
+            {initials}
+          </div>
+          <div style={{ overflow: 'hidden' }}>
+            <div style={{ fontWeight: 600, color: 'var(--tx2)', marginBottom: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {profile?.full_name || '—'}
+            </div>
+            <div style={{ color: 'var(--tx4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {profile?.company_name || profile?.email}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

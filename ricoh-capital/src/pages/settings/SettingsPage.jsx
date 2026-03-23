@@ -14,8 +14,9 @@ const profileSchema = z.object({
 });
 
 const passwordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword:     z.string().min(8, 'Password must be at least 8 characters'),
+  newPassword:     z.string().min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Must contain at least one number'),
   confirmPassword: z.string(),
 }).refine(d => d.newPassword === d.confirmPassword, {
   message: "Passwords don't match",
@@ -90,18 +91,8 @@ function PasswordSection() {
   const onSubmit = async (data) => {
     setSaving(true);
     try {
-      // Re-authenticate first by signing in with current password
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: data.currentPassword,
-      });
-      if (signInErr) throw new Error('Current password is incorrect');
-
-      // Then update the password
       const { error } = await supabase.auth.updateUser({ password: data.newPassword });
       if (error) throw error;
-
       reset();
       setDone(true);
       showToast('Password updated successfully', 'success');
@@ -115,9 +106,12 @@ function PasswordSection() {
 
   return (
     <div className="card" style={{ marginBottom: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
         <Lock size={15} style={{ color: 'var(--coral)' }} />
-        <div style={{ fontWeight: 600, fontSize: 14 }}>Change password</div>
+        <div style={{ fontWeight: 600, fontSize: 14 }}>Set password</div>
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--tx4)', marginBottom: 16 }}>
+        Choose a new password. You must be logged in to change it.
       </div>
       {done ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', color: 'var(--green)' }}>
@@ -126,18 +120,16 @@ function PasswordSection() {
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)}>
-          <FormField label="Current password" required error={errors.currentPassword?.message}>
-            <input {...register('currentPassword')} className="form-input" type="password" autoComplete="current-password" />
-          </FormField>
-          <FormField label="New password" required error={errors.newPassword?.message} hint="Minimum 8 characters">
-            <input {...register('newPassword')} className="form-input" type="password" autoComplete="new-password" />
+          <FormField label="New password" required error={errors.newPassword?.message}
+            hint="Min 8 characters, 1 uppercase, 1 number">
+            <input {...register('newPassword')} className="form-input" type="password" autoComplete="new-password" autoFocus />
           </FormField>
           <FormField label="Confirm new password" required error={errors.confirmPassword?.message}>
             <input {...register('confirmPassword')} className="form-input" type="password" autoComplete="new-password" />
           </FormField>
           <div style={{ marginTop: 8 }}>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? <><LoadingSpinner size={12} /> Updating…</> : 'Update password'}
+              {saving ? <><LoadingSpinner size={12} /> Updating…</> : 'Set password'}
             </button>
           </div>
         </form>
