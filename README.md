@@ -8,7 +8,8 @@ Full-stack **asset finance / leasing** workspace for originators, administrators
 
 | Resource | Description |
 |----------|-------------|
-| [**Interactive wireframe map**](ricoh_page_requirements.html) | 22-screen planning doc — **open this file in your browser** (clone the repo locally, then double-click or drag into Chrome/Edge/Firefox). GitHub’s file viewer does not run the embedded JavaScript. |
+| [**Interactive wireframe (in README)**](#interactive-wireframe-map) | Same 22 + 3 screens — **expand/collapse below** (no JavaScript; works on GitHub). |
+| [**Styled wireframe (HTML)**](ricoh_page_requirements.html) | Card layout + animations — open locally in a browser (clone repo, open file). |
 | [App source](ricoh-capital/) | React + Vite SPA (`ricoh-capital/`) |
 | [Edge Functions guide](ricoh-capital/EDGE_FUNCTIONS.md) | Deploy and configure Supabase Edge Functions |
 
@@ -16,6 +17,7 @@ Full-stack **asset finance / leasing** workspace for originators, administrators
 
 ## Table of contents
 
+- [Interactive wireframe map](#interactive-wireframe-map)
 - [Architecture](#architecture)
 - [Features by role](#features-by-role)
 - [Wireframe → routes](#wireframe--routes)
@@ -24,6 +26,366 @@ Full-stack **asset finance / leasing** workspace for originators, administrators
 - [Database & Supabase](#database--supabase)
 - [Project layout](#project-layout)
 - [Scripts](#scripts)
+
+---
+
+## Interactive wireframe map
+
+README files on GitHub (and similar hosts) **do not run JavaScript**, so [ricoh_page_requirements.html](ricoh_page_requirements.html) cannot execute inline in this page. The sections below mirror that document with native **`<details>` / `<summary>`** — click a row to expand requirements. For the full visual card grid, open the HTML file in your browser after cloning.
+
+<details>
+<summary><strong>At a glance — 22 screens · 6 feature areas</strong></summary>
+
+| Bucket | Screens | Notes |
+|--------|---------|--------|
+| Customer experience | P01–P17 | Onboarding, deals, portfolio, self-service |
+| Lead &amp; opportunity | P18–P22 | Prospects, quotes |
+| Shared / global | S01–S03 | Shell, empty/error, toasts |
+
+*Build shared patterns (S01–S03) first — other screens depend on the navigation shell.*
+
+</details>
+
+<details>
+<summary><strong>1 · Rapid Originator Onboarding</strong> — 5 pages (customer experience)</summary>
+
+<details>
+<summary><code>P01</code> Registration form — company &amp; contact details</summary>
+
+*First step of originator onboarding*
+
+- Company name, reg. number, address — `fields`
+- Primary contact + role — `fields`
+- Product line selection — `dropdown`
+- Terms acceptance — `checkbox`
+- Save &amp; continue CTA — `button`
+
+</details>
+
+<details>
+<summary><code>P02</code> Document upload — KYC / compliance files</summary>
+
+*KYC &amp; compliance file submission*
+
+- Required docs checklist — `list`
+- Drag &amp; drop upload zones — `upload`
+- File type / size validation — `inline`
+- Upload progress indicators — `state`
+- Back / submit for review CTA — `button`
+
+</details>
+
+<details>
+<summary><code>P03</code> Verification status — automated check progress</summary>
+
+*Real-time compliance check progress*
+
+- Step tracker (submitted → checking → approved) — `stepper`
+- Per-document check results — `list`
+- Estimated completion time — `info`
+- Resubmit link if failed — `action`
+
+</details>
+
+<details>
+<summary><code>P04</code> Admin review queue — approve / reject / request info</summary>
+
+*Internal admin-facing queue*
+
+- Queue list with status filters — `table`
+- Originator detail drawer — `panel`
+- Approve / Reject / Request info actions — `buttons`
+- Notes / reason field — `textarea`
+- Audit trail — `log`
+
+</details>
+
+<details>
+<summary><code>P05</code> Welcome &amp; activation — credentials + portal tour</summary>
+
+*Successful onboarding confirmation*
+
+- Welcome message + logo — `header`
+- Login credentials display — `info`
+- Portal feature highlights — `cards`
+- First steps checklist — `todo`
+- Enter portal CTA — `button`
+
+</details>
+
+</details>
+
+<details>
+<summary><strong>2 · Quick Deal Capture</strong> — 4 pages (customer experience)</summary>
+
+<details>
+<summary><code>P06</code> Deal initiation — customer + product select</summary>
+
+*Start point of a new deal*
+
+- Customer search / select — `autocomplete`
+- Product type dropdown — `dropdown`
+- Originator reference field — `field`
+- Draft save option — `link`
+
+</details>
+
+<details>
+<summary><code>P07</code> Asset &amp; financial details — type, value, term, rates</summary>
+
+*Core deal structuring screen*
+
+- Asset type, make, model, value — `fields`
+- Term, deposit, balloon — `fields`
+- Rate type (fixed / variable) — `toggle`
+- Live payment calculation — `computed`
+
+</details>
+
+<details>
+<summary><code>P08</code> Deal review &amp; submit — summary + confirm</summary>
+
+*Final check before submission*
+
+- Full deal summary card — `readonly`
+- Edit section links — `links`
+- Declaration checkbox — `checkbox`
+- Submit to credit CTA — `button`
+
+</details>
+
+<details>
+<summary><code>P09</code> Submission confirmation — ref number + status</summary>
+
+*Post-submit success state*
+
+- Reference number prominent — `hero`
+- Expected SLA / next steps — `info`
+- Track deal link — `link`
+- Submit another deal CTA — `button`
+
+</details>
+
+</details>
+
+<details>
+<summary><strong>3 · Configurable Live Asset Portfolio</strong> — 4 pages (customer experience)</summary>
+
+<details>
+<summary><code>P10</code> Portfolio dashboard — all contracts, KPIs, filters</summary>
+
+*Live view of all customer assets*
+
+- Summary KPI row (active, value, overdue) — `metric cards`
+- Filterable data table — `table`
+- Status badges per row — `badges`
+- Quick actions per row — `dropdown`
+
+</details>
+
+<details>
+<summary><code>P11</code> View configurator — columns, sort, save view</summary>
+
+*Customise table columns &amp; sorting*
+
+- Column visibility toggles — `checkboxes`
+- Sort order drag handles — `drag`
+- Save named view CTA — `button`
+- Saved views list — `list`
+
+</details>
+
+<details>
+<summary><code>P12</code> Asset detail — contract, payments, docs</summary>
+
+*Deep dive into a single contract*
+
+- Contract header (ID, status, customer) — `header`
+- Payment schedule table — `table`
+- Documents tab — `tab`
+- Activity / notes tab — `tab`
+
+</details>
+
+<details>
+<summary><code>P13</code> Export &amp; reports — CSV / scheduled reports</summary>
+
+*Data export &amp; scheduled reporting*
+
+- Export format select (CSV, XLSX) — `radio`
+- Field selection — `checkboxes`
+- Schedule recurring report — `toggle`
+- Download / email CTA — `button`
+
+</details>
+
+</details>
+
+<details>
+<summary><strong>4 · Customer / Partner Self Service</strong> — 4 pages (customer experience)</summary>
+
+<details>
+<summary><code>P14</code> Self-service login — SSO or credentials</summary>
+
+*Customer / partner portal entry*
+
+- Email + password fields — `fields`
+- SSO option — `button`
+- Forgot password link — `link`
+- Branding / trust mark — `layout`
+
+</details>
+
+<details>
+<summary><code>P15</code> My dashboard — contracts, quotes, alerts</summary>
+
+*Customer home screen*
+
+- Active contracts summary — `cards`
+- Upcoming payments — `list`
+- Recent quotes — `list`
+- Notification bell — `icon`
+
+</details>
+
+<details>
+<summary><code>P16</code> Account actions — statements, service requests</summary>
+
+*Self-service request centre*
+
+- Download statement — `action`
+- Request early settlement — `form`
+- Request upgrade / variation — `form`
+- Contact us link — `link`
+
+</details>
+
+<details>
+<summary><code>P17</code> Notifications centre — alerts, payments due</summary>
+
+*All system alerts in one place*
+
+- Notification list with type icons — `list`
+- Read / unread state — `state`
+- Mark all read action — `button`
+- Deep-link to related record — `link`
+
+</details>
+
+</details>
+
+<details>
+<summary><strong>5 · Prospect / Customer Management</strong> — 3 pages (lead &amp; opp.)</summary>
+
+<details>
+<summary><code>P18</code> Prospect list — search, filter, pipeline stage</summary>
+
+*CRM-style prospect management table*
+
+- Searchable table with stage filter — `table`
+- Pipeline stage pills — `badges`
+- Assign to user — `dropdown`
+- Create new prospect CTA — `button`
+
+</details>
+
+<details>
+<summary><code>P19</code> Prospect profile — contacts, notes, activity</summary>
+
+*360 view of a single prospect*
+
+- Company header + key fields — `header`
+- Contacts list — `list`
+- Activity timeline — `timeline`
+- Log call / email / note — `buttons`
+
+</details>
+
+<details>
+<summary><code>P20</code> Qualify / convert — stage, score, link account</summary>
+
+*Move prospect to opportunity or customer*
+
+- Qualification score inputs — `fields`
+- Stage dropdown — `dropdown`
+- Convert to customer modal — `modal`
+- Link to deal / account — `autocomplete`
+
+</details>
+
+</details>
+
+<details>
+<summary><strong>6 · Quick Quote Generation</strong> — 2 pages (lead &amp; opp.)</summary>
+
+<details>
+<summary><code>P21</code> Quote builder — asset, term, rate, live calc</summary>
+
+*Interactive quote creation tool*
+
+- Customer + asset select — `autocomplete`
+- Term, deposit, rate type inputs — `fields`
+- Live monthly payment calc — `computed`
+- Multiple scenario tabs — `tabs`
+- Generate quote CTA — `button`
+
+</details>
+
+<details>
+<summary><code>P22</code> Quote output — PDF preview, send, eSign</summary>
+
+*Final quote delivery &amp; actions*
+
+- Branded PDF preview pane — `iframe`
+- Send by email / shareable link — `button`
+- Save &amp; link to opportunity — `button`
+- eSign initiation option — `button`
+- Edit quote link — `link`
+
+</details>
+
+</details>
+
+<details>
+<summary><strong>7 · Shared / global patterns</strong> — S01–S03</summary>
+
+<details>
+<summary><code>S01</code> Global navigation — sidebar + top bar shell</summary>
+
+*The wrapper for every logged-in page*
+
+- Left sidebar with nav items — `nav`
+- Top bar with user menu — `header`
+- Breadcrumb pattern — `breadcrumb`
+- Active state per feature — `state`
+
+</details>
+
+<details>
+<summary><code>S02</code> Empty / error states — zero data, 404, forbidden</summary>
+
+*Graceful handling of edge cases*
+
+- Empty list state (no results) — `state`
+- API error state — `state`
+- 403 / 404 page — `state`
+- Retry / back actions — `button`
+
+</details>
+
+<details>
+<summary><code>S03</code> Notifications &amp; toasts — success, warning, error</summary>
+
+*System feedback patterns*
+
+- Success toast (green) — `toast`
+- Warning toast (amber) — `toast`
+- Error toast (red) — `toast`
+- Persistent alert banner — `banner`
+
+</details>
+
+</details>
 
 ---
 
@@ -91,7 +453,7 @@ flowchart LR
 
 ## Wireframe → routes
 
-The [page requirements HTML](ricoh_page_requirements.html) lists screens **P01–P22** plus shared patterns **S01–S03**. Below is how they map to the React app (`ricoh-capital/src/App.jsx`).
+Screen IDs **P01–P22** and **S01–S03** are defined in the [interactive wireframe map](#interactive-wireframe-map) above and in [ricoh_page_requirements.html](ricoh_page_requirements.html). Below is how they map to the React app (`ricoh-capital/src/App.jsx`).
 
 <details>
 <summary><strong>P01–P05 — Rapid originator onboarding &amp; admin review</strong></summary>
@@ -219,7 +581,7 @@ Copy from [`ricoh-capital/.env.example`](ricoh-capital/.env.example):
 ```
 Ricoh/
 ├── README.md                      ← You are here
-├── ricoh_page_requirements.html   ← Interactive wireframe (open in browser)
+├── ricoh_page_requirements.html   ← Styled wireframe (open in browser); README has expand/collapse version
 ├── ricoh_capital_demo.html        ← Demo / marketing HTML (if present)
 └── ricoh-capital/
     ├── src/                       ← React app (pages, hooks, auth, components)
