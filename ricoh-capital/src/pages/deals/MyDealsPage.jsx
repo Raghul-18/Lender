@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, FileText, Clock, CheckCircle, XCircle, Send, ChevronRight, RefreshCw } from 'lucide-react';
 import { useDeals } from '../../hooks/useDeals';
 import { LoadingSpinner } from '../../components/shared/FormField';
+import { useCurrency } from '../../hooks/useCurrency';
 
 const STATUS_META = {
   draft:        { label: 'Draft',        color: 'var(--tx3)',   bg: 'var(--bg)',        icon: <FileText size={12} /> },
@@ -17,6 +18,7 @@ export default function MyDealsPage() {
   const { data: deals = [], isLoading, error, refetch } = useDeals();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const { symbol } = useCurrency();
 
   const filtered = deals
     .filter(d => filter === 'all' || d.status === filter)
@@ -139,7 +141,7 @@ export default function MyDealsPage() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>£{(d.monthly_payment || 0).toLocaleString()}/mo</div>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{symbol}{(d.monthly_payment || 0).toLocaleString()}/mo</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'flex-end', marginTop: 4 }}>
                     <span style={{
                       fontSize: 10, fontWeight: 600, color: sm.color, background: sm.bg,

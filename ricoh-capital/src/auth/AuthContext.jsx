@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { supabase, db } from '../lib/supabase';
 import { queryClient } from '../lib/queryClient';
+import { useOnboardingStore } from '../store/onboardingStore';
 
 const AuthContext = createContext(null);
 
@@ -8,6 +9,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const activeUserId = useRef(null);
 
   const fetchProfile = async (userId) => {
     const { data, error } = await db.profiles()
@@ -19,18 +21,34 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    // Safety net: if session check hangs (e.g. network hiccup), unblock the UI after 6 s
+    const loadingTimeout = setTimeout(() => setLoading(false), 6000);
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(loadingTimeout);
       setUser(session?.user ?? null);
       if (session?.user) {
+        activeUserId.current = session.user.id;
         fetchProfile(session.user.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }
+    }).catch(() => {
+      clearTimeout(loadingTimeout);
+      setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const nextUserId = session?.user?.id ?? null;
+
+      // If user changed (different account or signed out) clear onboarding store
+      if (nextUserId !== activeUserId.current) {
+        useOnboardingStore.getState().reset();
+      }
+      activeUserId.current = nextUserId;
+
       setUser(session?.user ?? null);
       if (session?.user) {
         await fetchProfile(session.user.id);
@@ -41,7 +59,10 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(loadingTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email, password) => {
@@ -64,6 +85,7 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    useOnboardingStore.getState().reset();
     setUser(null);
     setProfile(null);
     queryClient.clear();

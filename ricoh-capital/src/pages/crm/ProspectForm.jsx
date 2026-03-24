@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { prospectSchema } from '../../schemas';
 import { useCreateProspect, useUpdateProspect } from '../../hooks/useProspects';
 import { FormField, LoadingSpinner } from '../../components/shared/FormField';
+import { useCurrency } from '../../hooks/useCurrency';
 
 const STAGES = ['New lead', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
 const INDUSTRIES = ['Construction', 'Transport & logistics', 'Manufacturing', 'Healthcare', 'Food & agriculture', 'Technology', 'Professional services', 'Retail', 'Education', 'Energy', 'Other'];
@@ -14,6 +15,7 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }) {
   const create = useCreateProspect();
   const update = useUpdateProspect();
   const isEdit = !!prospect;
+  const { symbol } = useCurrency();
 
   const handleSuccess = () => onSuccess ? onSuccess() : navigate('/crm');
   const handleCancel = () => onCancel ? onCancel() : navigate('/crm');
@@ -89,7 +91,7 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }) {
               </FormField>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
-              <FormField label="Annual turnover (£)" error={errors.annualTurnover?.message}>
+              <FormField label={`Annual turnover (${symbol})`} error={errors.annualTurnover?.message}>
                 <input {...register('annualTurnover', { valueAsNumber: true })} className="form-input" type="number" min="0" placeholder="1000000" />
               </FormField>
               <FormField label="Employees" error={errors.employeeCount?.message}>
@@ -128,7 +130,7 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }) {
                 {PRODUCTS.map(p => <option key={p}>{p}</option>)}
               </select>
             </FormField>
-            <FormField label="Estimated deal value (£)" error={errors.estimatedValue?.message}>
+            <FormField label={`Estimated deal value (${symbol})`} error={errors.estimatedValue?.message}>
               <input {...register('estimatedValue', { valueAsNumber: true })} className="form-input" type="number" min="0" placeholder="50000" />
             </FormField>
           </div>

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { db } from '../../lib/supabase';
 import { keys } from '../../lib/queryClient';
 import { LoadingSpinner } from '../../components/shared/FormField';
+import { useCurrency } from '../../hooks/useCurrency';
 
 function useAdminStats() {
   return useQuery({
@@ -70,6 +71,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { data: stats, isLoading: statsLoading } = useAdminStats();
   const { data: activity, isLoading: actLoading } = useRecentActivity();
+  const { symbol } = useCurrency();
 
   if (statsLoading) return <div className="page-loading"><LoadingSpinner size={24} /></div>;
 
@@ -78,8 +80,8 @@ export default function AdminDashboard() {
     { label: 'Applications pending', value: stats?.pendingApplications ?? '—', icon: <ClipboardList size={18} />, color: stats?.pendingApplications > 0 ? 'var(--amber)' : 'var(--green)', action: '/admin/review' },
     { label: 'Deals awaiting decision', value: stats?.dealsAwaitingReview ?? '—', icon: <Send size={18} />, color: stats?.dealsAwaitingReview > 0 ? 'var(--coral)' : 'var(--green)', action: '/admin/deals' },
     { label: 'Active contracts', value: stats?.activeContracts ?? '—', icon: <CheckCircle size={18} />, color: 'var(--green)', action: null },
-    { label: 'Total portfolio', value: stats ? `£${(stats.totalPortfolioValue / 1_000_000).toFixed(2)}M` : '—', icon: <TrendingUp size={18} />, color: 'var(--coral)', action: null },
-    { label: 'Monthly book', value: stats ? `£${(stats.monthlyBook).toLocaleString()}` : '—', icon: <BarChart3 size={18} />, color: 'var(--blue)', action: null },
+    { label: 'Total portfolio', value: stats ? `${symbol}${(stats.totalPortfolioValue / 1_000_000).toFixed(2)}M` : '—', icon: <TrendingUp size={18} />, color: 'var(--coral)', action: null },
+    { label: 'Monthly book', value: stats ? `${symbol}${(stats.monthlyBook).toLocaleString()}` : '—', icon: <BarChart3 size={18} />, color: 'var(--blue)', action: null },
   ];
 
   return (
@@ -213,7 +215,7 @@ export default function AdminDashboard() {
             ['Deals in pipeline', stats?.dealsAwaitingReview, stats?.dealsAwaitingReview > 0 ? 'var(--coral)' : 'var(--green)'],
             ['Approved deals (total)', stats?.dealsApproved, 'var(--blue)'],
             ['Active contracts', stats?.activeContracts, 'var(--green)'],
-            ['Monthly book value', stats ? `£${(stats.monthlyBook).toLocaleString()}` : '—', 'var(--coral)'],
+            ['Monthly book value', stats ? `${symbol}${(stats.monthlyBook).toLocaleString()}` : '—', 'var(--coral)'],
           ].map(([label, value, color]) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, paddingBottom: 8, borderBottom: '1px solid var(--bdr)', marginBottom: 8 }}>
               <span style={{ color: 'var(--tx3)' }}>{label}</span>

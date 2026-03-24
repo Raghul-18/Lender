@@ -35,6 +35,7 @@ export const db = {
   notifications: () => supabase.from('notifications'),
   auditLogs: () => supabase.from('audit_logs'),
   amendments: () => supabase.from('deal_amendments'),
+  productRates: () => supabase.from('product_rates'),
 };
 
 // ── Storage helpers ────────────────────────────────────────
@@ -44,22 +45,50 @@ export const storage = {
   contracts: supabase.storage.from('contracts'),
 };
 
-// ── Utility: upload file with progress tracking ────────────
+// ── Utility: upload file with real XHR progress tracking ──────
 
 export async function uploadDocument(userId, documentType, file, onProgress) {
   const ext = file.name.split('.').pop();
   const path = `${userId}/${documentType}_${Date.now()}.${ext}`;
 
-  // Supabase storage doesn't have native progress, so we simulate it
-  onProgress?.(10);
-  const { data, error } = await storage.documents.upload(path, file, {
-    contentType: file.type,
-    upsert: true,
-  });
-  onProgress?.(100);
+  // Get the current session token for authenticated upload
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
 
-  if (error) throw error;
-  return { path: data.path, fullPath: data.fullPath };
+  const uploadUrl = `${supabaseUrl}/storage/v1/object/documents/${path}`;
+
+  await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', uploadUrl);
+    xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+    xhr.setRequestHeader('Content-Type', file.type);
+    xhr.setRequestHeader('x-upsert', 'true');
+
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        try {
+          const body = JSON.parse(xhr.responseText);
+          reject(new Error(body?.message || `Upload failed (${xhr.status})`));
+        } catch {
+          reject(new Error(`Upload failed (${xhr.status})`));
+        }
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.send(file);
+  });
+
+  return { path, fullPath: `documents/${path}` };
 }
 
 // Returns a signed URL valid for 1 hour (private bucket)

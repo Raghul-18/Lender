@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Users, Search, Phone, Mail, Building2, ChevronRight } from 'lucide-react';
 import { useProspects } from '../../hooks/useProspects';
 import { LoadingSpinner } from '../../components/shared/FormField';
+import { useCurrency } from '../../hooks/useCurrency';
 
 const STAGE_META = {
   'New lead':    { label: 'New lead',    color: 'var(--tx3)',    bg: 'var(--bg)' },
@@ -20,6 +21,7 @@ export default function P18ProspectList() {
   const { data: prospects = [], isLoading, error } = useProspects();
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('all');
+  const { symbol } = useCurrency();
 
   const filtered = prospects
     .filter(p => stageFilter === 'all' || p.pipeline_stage === stageFilter)
@@ -109,7 +111,7 @@ export default function P18ProspectList() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   {p.estimated_value && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>£{p.estimated_value.toLocaleString()}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{symbol}{p.estimated_value.toLocaleString()}</span>
                   )}
                   <span style={{ fontSize: 11, fontWeight: 600, color: meta.color, background: meta.bg, borderRadius: 10, padding: '3px 8px' }}>{meta.label}</span>
                   <ChevronRight size={14} style={{ color: 'var(--tx4)' }} />

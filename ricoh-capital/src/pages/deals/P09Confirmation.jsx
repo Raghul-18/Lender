@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Plus, LayoutDashboard, Info } from 'lucide-react';
 import { useDealStore } from '../../store/dealStore';
+import { useCurrency } from '../../hooks/useCurrency';
 
 export default function P09Confirmation() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function P09Confirmation() {
   useEffect(() => { if (!submittedRefNumber) navigate('/deals/new'); }, [submittedRefNumber]);
 
   const monthly = getMonthlyPayment();
+  const { symbol } = useCurrency();
 
   const handleNewDeal = () => { reset(); navigate('/deals/new'); };
 
@@ -33,8 +35,8 @@ export default function P09Confirmation() {
           ['Product', initiation.productType],
           ['Your reference', initiation.originatorReference],
           ['Asset', `${assetDetails.year} ${assetDetails.make} ${assetDetails.model}`],
-          ['Asset value', `£${(assetDetails.assetValue || 0).toLocaleString()}`],
-          ['Monthly payment', `£${monthly.toLocaleString()}`],
+          ['Asset value', `${symbol}${(assetDetails.assetValue || 0).toLocaleString()}`],
+          ['Monthly payment', `${symbol}${monthly.toLocaleString()}`],
           ['Term', `${assetDetails.termMonths} months`],
         ].map(([k, v, mono]) => (
           <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, paddingBottom: 6, borderBottom: '1px solid var(--bdr)', marginBottom: 6 }}>
