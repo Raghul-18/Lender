@@ -391,22 +391,30 @@ README files on GitHub (and similar hosts) **do not run JavaScript**, so [ricoh_
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  subgraph client [Browser]
-    SPA[React SPA]
-  end
-  subgraph supabase [Supabase]
-    Auth[Auth]
-    DB[(PostgreSQL + RLS)]
-    Storage[Storage]
-    EF[Edge Functions]
-  end
-  SPA --> Auth
-  SPA --> DB
-  SPA --> Storage
-  SPA --> EF
-  EF --> DB
+```
+┌─────────────────────────────────────────────────────────┐
+│  Browser                                                │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  React SPA  (Vite · React Router · TanStack Query│  │
+│  │             Zustand · React Hook Form · Zod)      │  │
+│  └───────┬──────────┬──────────┬──────────┬─────────┘  │
+└──────────│──────────│──────────│──────────│─────────────┘
+           │          │          │          │
+     (auth)│    (data)│  (files) │ (invoke) │
+           ▼          ▼          ▼          ▼
+┌─────────────────────────────────────────────────────────┐
+│  Supabase                                               │
+│  ┌────────┐  ┌─────────────────────┐  ┌─────────────┐  │
+│  │  Auth  │  │  PostgreSQL + RLS   │  │   Storage   │  │
+│  └────────┘  └─────────▲───────────┘  └─────────────┘  │
+│                        │                               │
+│              ┌─────────┴──────────┐                    │
+│              │   Edge Functions   │                    │
+│              │ invite-customer    │                    │
+│              │ invite-admin       │                    │
+│              │ update-pay-status  │                    │
+│              └────────────────────┘                    │
+└─────────────────────────────────────────────────────────┘
 ```
 
 - **Frontend:** React, React Router, TanStack Query, Zustand, React Hook Form + Zod, Supabase JS client, Lucide icons.
