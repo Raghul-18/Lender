@@ -100,6 +100,50 @@ export function useMarkPaymentPaid() {
   });
 }
 
+// Customer: pay an instalment (with optional principal overpayment)
+export function useCustomerPayNow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ paymentId, contractId, amountPaid, extraPrincipal }) => {
+      // 1. Mark this instalment as paid
+      const { error: pErr } = await db.paymentSchedule()
+        .update({
+          status: 'paid',
+          paid_at: new Date().toISOString(),
+          amount_paid: amountPaid,
+          extra_principal: extraPrincipal || 0,
+        })
+        .eq('id', paymentId);
+      if (pErr) throw pErr;
+
+      // 2. If extra principal was paid, redistribute it across remaining unpaid rows
+      if (extraPrincipal > 0) {
+        const { data: remaining, error: rErr } = await db.paymentSchedule()
+          .select('id, amount')
+          .eq('contract_id', contractId)
+          .neq('status', 'paid');
+        if (rErr) throw rErr;
+
+        if (remaining && remaining.length > 0) {
+          const currentTotal = remaining.reduce((s, p) => s + (p.amount || 0), 0);
+          const newTotal = Math.max(0, currentTotal - extraPrincipal);
+          const newAmount = Math.round((newTotal / remaining.length) * 100) / 100;
+
+          const { error: uErr } = await db.paymentSchedule()
+            .update({ amount: newAmount })
+            .in('id', remaining.map(p => p.id));
+          if (uErr) throw uErr;
+        }
+      }
+    },
+    onSuccess: (_, { contractId }) => {
+      qc.invalidateQueries({ queryKey: keys.paymentSchedule(contractId) });
+      qc.invalidateQueries({ queryKey: keys.contract(contractId) });
+      qc.invalidateQueries({ queryKey: ['customer-contracts'] });
+    },
+  });
+}
+
 // Admin: cancel a contract
 export function useCancelContract() {
   const qc = useQueryClient();

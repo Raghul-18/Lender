@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, XCircle } from 'lucide-react';
-import { useContract, usePaymentSchedule, useMarkPaymentPaid, useCancelContract } from '../../hooks/useContracts';
+import { CheckCircle, XCircle, CreditCard, TrendingDown } from 'lucide-react';
+import { useContract, usePaymentSchedule, useMarkPaymentPaid, useCancelContract, useCustomerPayNow } from '../../hooks/useContracts';
 import { useAuth } from '../../auth/AuthContext';
 import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
@@ -31,6 +31,7 @@ export default function P12AssetDetail() {
   const markPaid = useMarkPaymentPaid();
   const cancelContract = useCancelContract();
   const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [payingPayment, setPayingPayment] = useState(null);
 
   if (contractLoading) return <div className="page-loading"><LoadingSpinner size={24} /></div>;
   if (!contract) return <div className="page-error">Contract not found.</div>;
@@ -41,8 +42,9 @@ export default function P12AssetDetail() {
   const sm = STATUS_META[contract.status] || STATUS_META.active;
   const paidPayments = schedule.filter(p => p.status === 'paid').length;
   const progressPct = schedule.length ? Math.round((paidPayments / schedule.length) * 100) : 0;
-  const totalPaid = schedule.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0);
-  const outstanding = (schedule.length - paidPayments) * (contract.monthly_payment || 0);
+  const totalPaid = schedule.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount_paid || p.amount || 0), 0);
+  const totalExtraPrincipal = schedule.reduce((s, p) => s + (p.extra_principal || 0), 0);
+  const outstanding = Math.max(0, (schedule.length - paidPayments) * (contract.monthly_payment || 0) - totalExtraPrincipal);
 
   const handleMarkPaid = async (paymentId) => {
     try {
@@ -176,38 +178,53 @@ export default function P12AssetDetail() {
                     <th style={{ textAlign: 'right' }}>Amount</th>
                     <th>Status</th>
                     <th>Paid on</th>
-                    {isAdmin && <th style={{ width: 80 }} />}
+                    <th style={{ width: 110 }} />
                   </tr>
                 </thead>
                 <tbody>
                   {schedule.map(p => {
                     const pm = PAYMENT_META[p.status] || PAYMENT_META.upcoming;
                     const canMarkPaid = isAdmin && p.status !== 'paid';
+                    const canPayNow = isCustomer && p.status !== 'paid';
                     return (
                       <tr key={p.id}>
                         <td style={{ color: 'var(--tx4)', fontSize: 11 }}>{p.payment_number}</td>
                         <td style={{ fontSize: 12 }}>{new Date(p.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 600, fontSize: 12 }}>£{(p.amount || 0).toLocaleString()}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 600, fontSize: 12 }}>
+                          £{(p.amount || 0).toLocaleString()}
+                          {(p.extra_principal > 0) && (
+                            <div style={{ fontSize: 10, color: 'var(--green)', fontWeight: 400 }}>
+                              +£{p.extra_principal.toLocaleString()} principal
+                            </div>
+                          )}
+                        </td>
                         <td>
                           <span style={{ fontSize: 11, color: pm.color, fontWeight: 500 }}>{pm.label}</span>
                         </td>
                         <td style={{ fontSize: 11, color: 'var(--tx4)' }}>
                           {p.paid_at ? new Date(p.paid_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
                         </td>
-                        {isAdmin && (
-                          <td>
-                            {canMarkPaid && (
-                              <button
-                                className="btn btn-ghost"
-                                style={{ fontSize: 10, padding: '2px 8px', color: 'var(--green)' }}
-                                onClick={() => handleMarkPaid(p.id)}
-                                disabled={markPaid.isPending}
-                              >
-                                <CheckCircle size={10} /> Paid
-                              </button>
-                            )}
-                          </td>
-                        )}
+                        <td>
+                          {canMarkPaid && (
+                            <button
+                              className="btn btn-ghost"
+                              style={{ fontSize: 10, padding: '2px 8px', color: 'var(--green)' }}
+                              onClick={() => handleMarkPaid(p.id)}
+                              disabled={markPaid.isPending}
+                            >
+                              <CheckCircle size={10} /> Paid
+                            </button>
+                          )}
+                          {canPayNow && (
+                            <button
+                              className="btn btn-primary"
+                              style={{ fontSize: 10, padding: '3px 10px' }}
+                              onClick={() => setPayingPayment(p)}
+                            >
+                              <CreditCard size={10} /> Pay now
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -215,6 +232,190 @@ export default function P12AssetDetail() {
               </table>
             </div>
           )}
+        </div>
+      </div>
+
+      {payingPayment && (
+        <PayNowModal
+          payment={payingPayment}
+          contractId={id}
+          schedule={schedule}
+          onClose={() => setPayingPayment(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function PayNowModal({ payment, contractId, schedule, onClose }) {
+  const [payExtra, setPayExtra] = useState(false);
+  const [extraAmount, setExtraAmount] = useState('');
+  const [extraError, setExtraError] = useState('');
+  const payNow = useCustomerPayNow();
+  const { showToast } = useAppContext();
+
+  const dueAmount = payment.amount || 0;
+  const extra = parseFloat(extraAmount) || 0;
+  const totalAmount = dueAmount + (payExtra ? extra : 0);
+
+  // Remaining payments after this one (exclude current + already paid)
+  const remainingPayments = (schedule || []).filter(p => p.status !== 'paid' && p.id !== payment.id);
+  const remainingCount = remainingPayments.length;
+  const currentRemainingTotal = remainingPayments.reduce((s, p) => s + (p.amount || 0), 0);
+  const newRemainingTotal = Math.max(0, currentRemainingTotal - (payExtra ? extra : 0));
+  const newMonthly = remainingCount > 0 ? Math.round((newRemainingTotal / remainingCount) * 100) / 100 : 0;
+  const showImpact = payExtra && extra > 0 && remainingCount > 0;
+
+  const handlePay = async () => {
+    if (payExtra && extra <= 0) {
+      setExtraError('Enter a valid extra amount greater than zero');
+      return;
+    }
+    if (payExtra && extra > currentRemainingTotal && remainingCount > 0) {
+      setExtraError(`Maximum extra is £${currentRemainingTotal.toLocaleString()} (full remaining balance)`);
+      return;
+    }
+    try {
+      await payNow.mutateAsync({
+        paymentId: payment.id,
+        contractId,
+        amountPaid: totalAmount,
+        extraPrincipal: payExtra ? extra : 0,
+      });
+      showToast('Payment recorded successfully', 'success');
+      onClose();
+    } catch (err) {
+      showToast(err.message || 'Payment failed. Please try again.', 'error');
+    }
+  };
+
+  return (
+    <div className="modal-bg show" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{ maxWidth: 400, width: '100%' }}>
+        <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <CreditCard size={15} style={{ color: 'var(--coral)' }} />
+          Pay instalment #{payment.payment_number}
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 3 }}>Due date</div>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>
+            {new Date(payment.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
+        </div>
+
+        {/* Amount due */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: 'var(--bg)', border: '1px solid var(--bdr)',
+          borderRadius: 'var(--rl)', padding: '12px 14px', marginBottom: 14,
+        }}>
+          <span style={{ fontSize: 12, color: 'var(--tx3)' }}>Amount due</span>
+          <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--coral)' }}>
+            £{dueAmount.toLocaleString()}
+          </span>
+        </div>
+
+        {/* Pay extra toggle */}
+        <div style={{
+          background: payExtra ? 'var(--green-l)' : 'var(--bg)',
+          border: `1px solid ${payExtra ? 'var(--green)' : 'var(--bdr)'}`,
+          borderRadius: 'var(--rl)', padding: '12px 14px', marginBottom: 16, transition: '0.2s',
+        }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', userSelect: 'none' }}>
+            <input
+              type="checkbox"
+              checked={payExtra}
+              onChange={e => { setPayExtra(e.target.checked); setExtraAmount(''); setExtraError(''); }}
+              style={{ marginTop: 2, width: 14, height: 14, accentColor: 'var(--green)', flexShrink: 0 }}
+            />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: payExtra ? 'var(--green)' : 'var(--tx2)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <TrendingDown size={13} /> Pay more to reduce principal
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2, lineHeight: 1.4 }}>
+                Any extra amount is applied directly off your outstanding balance
+              </div>
+            </div>
+          </label>
+
+          {payExtra && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 5 }}>
+                Extra amount (£)
+              </div>
+              <input
+                className="form-input"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="e.g. 500"
+                value={extraAmount}
+                onChange={e => { setExtraAmount(e.target.value); setExtraError(''); }}
+                autoFocus
+              />
+              {extraError && (
+                <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4 }}>{extraError}</div>
+              )}
+
+              {/* Live impact preview */}
+              {showImpact && (
+                <div style={{
+                  marginTop: 10, padding: '10px 12px',
+                  background: 'var(--green-l)', border: '1px solid var(--green)',
+                  borderRadius: 8,
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <TrendingDown size={11} /> Impact on remaining payments
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--tx2)', marginBottom: 3 }}>
+                    <span>Remaining instalments</span>
+                    <strong>{remainingCount}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--tx2)', marginBottom: 3 }}>
+                    <span>Current monthly</span>
+                    <span style={{ textDecoration: extra > 0 ? 'line-through' : 'none', color: 'var(--tx3)' }}>
+                      £{(remainingPayments[0]?.amount || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--green)', fontWeight: 700 }}>
+                    <span>New monthly</span>
+                    <span>£{newMonthly.toLocaleString()}</span>
+                  </div>
+                  {extra >= currentRemainingTotal && (
+                    <div style={{ marginTop: 6, fontSize: 11, color: 'var(--amber)', fontWeight: 600 }}>
+                      Extra amount clears the remaining balance entirely
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Total */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '10px 14px', background: 'var(--coral-l)',
+          borderRadius: 'var(--rl)', marginBottom: 20,
+        }}>
+          <span style={{ fontSize: 12, fontWeight: 600 }}>Total to pay</span>
+          <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--coral)' }}>
+            £{totalAmount.toLocaleString()}
+          </span>
+        </div>
+
+        <div className="modal-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button
+            className="btn btn-primary"
+            onClick={handlePay}
+            disabled={payNow.isPending}
+            style={{ minWidth: 150 }}
+          >
+            {payNow.isPending ? <LoadingSpinner size={13} /> : <CreditCard size={13} />}
+            Pay £{totalAmount.toLocaleString()}
+          </button>
         </div>
       </div>
     </div>
