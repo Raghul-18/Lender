@@ -1,4 +1,4 @@
-# Ricoh Capital Platform
+# Zoro Capital Platform
 
 Full-stack **asset finance / leasing** workspace for originators, administrators, and end customers. The live product UI is branded as **Zoro Capital** in configuration; product planning wireframes use the **Ricoh Capital** name.
 
