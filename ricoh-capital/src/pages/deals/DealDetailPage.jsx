@@ -8,6 +8,7 @@ import { useDeal } from '../../hooks/useDeals';
 import { useDealAmendments, useRequestAmendment } from '../../hooks/useAmendments';
 import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
+import { useCurrency } from '../../hooks/useCurrency';
 
 const AMENDMENT_TYPES = [
   { value: 'term_extension',  label: 'Term extension' },
@@ -147,6 +148,7 @@ export default function DealDetailPage() {
   const navigate = useNavigate();
   const { data: deal, isLoading } = useDeal(id);
   const isApproved = deal?.status === 'approved';
+  const { symbol } = useCurrency();
 
   if (isLoading) return <div className="page-loading"><LoadingSpinner size={24} /></div>;
   if (!deal) return <div className="page-error">Deal not found.</div>;
@@ -277,7 +279,7 @@ export default function DealDetailPage() {
             <Row label="Make" value={deal.asset_make} />
             <Row label="Model" value={deal.asset_model} />
             <Row label="Year" value={deal.asset_year} />
-            <Row label="Value" value={`£${(deal.asset_value || 0).toLocaleString()}`} />
+            <Row label="Value" value={`${symbol}${(deal.asset_value || 0).toLocaleString()}`} />
           </div>
 
           {/* Amendment requests */}
@@ -294,18 +296,18 @@ export default function DealDetailPage() {
             <div style={{ textAlign: 'center', padding: '12px 0 18px', borderBottom: '1px solid var(--bdr)', marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Monthly payment</div>
               <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--coral)', lineHeight: 1.2 }}>
-                £{(deal.monthly_payment || 0).toLocaleString()}
+                {symbol}{(deal.monthly_payment || 0).toLocaleString()}
               </div>
             </div>
             {[
-              ['Asset value',     `£${(deal.asset_value || 0).toLocaleString()}`],
-              ['Deposit',         deal.deposit ? `£${deal.deposit.toLocaleString()}` : 'None'],
-              ['Balloon',         deal.balloon ? `£${deal.balloon.toLocaleString()}` : 'None'],
-              ['Amount financed', `£${Math.max(0, (deal.asset_value || 0) - (deal.deposit || 0) - (deal.balloon || 0)).toLocaleString()}`],
+              ['Asset value',     `${symbol}${(deal.asset_value || 0).toLocaleString()}`],
+              ['Deposit',         deal.deposit ? `${symbol}${deal.deposit.toLocaleString()}` : 'None'],
+              ['Balloon',         deal.balloon ? `${symbol}${deal.balloon.toLocaleString()}` : 'None'],
+              ['Amount financed', `${symbol}${Math.max(0, (deal.asset_value || 0) - (deal.deposit || 0) - (deal.balloon || 0)).toLocaleString()}`],
               ['Term',            `${deal.term_months} months`],
               ['Rate type',       deal.rate_type],
               ['APR',             `${deal.apr}%`],
-              ['Total payable',   `£${(deal.total_payable || 0).toLocaleString()}`],
+              ['Total payable',   `${symbol}${(deal.total_payable || 0).toLocaleString()}`],
             ].map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
                 <span style={{ color: 'var(--tx3)' }}>{k}</span>

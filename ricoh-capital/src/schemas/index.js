@@ -31,7 +31,7 @@ export const assetDetailsSchema = z.object({
   make: z.string().min(1, 'Make is required'),
   model: z.string().min(1, 'Model is required'),
   year: z.number().min(1990).max(new Date().getFullYear() + 1),
-  assetValue: z.number().min(1000, 'Asset value must be at least £1,000'),
+  assetValue: z.number().min(1000, 'Asset value must be at least 1,000'),
   termMonths: z.number().min(6).max(120),
   deposit: z.number().min(0),
   balloon: z.number().min(0),

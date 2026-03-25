@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Building2, Lock, CheckCircle } from 'lucide-react';
+import { User, Building2, Lock, CheckCircle, Globe } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { db, supabase } from '../../lib/supabase';
 import { useAppContext } from '../../context/AppContext';
 import { FormField, LoadingSpinner } from '../../components/shared/FormField';
+import { useCurrency } from '../../hooks/useCurrency';
 
 const profileSchema = z.object({
   full_name:    z.string().min(2, 'Name must be at least 2 characters'),
@@ -141,6 +142,40 @@ function PasswordSection() {
   );
 }
 
+function CurrencySection() {
+  const { code, setCurrency, currencies, label } = useCurrency();
+  const { showToast } = useAppContext();
+
+  return (
+    <div className="card" style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <Globe size={15} style={{ color: 'var(--coral)' }} />
+        <div style={{ fontWeight: 600, fontSize: 14 }}>Currency</div>
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--tx4)', marginBottom: 14 }}>
+        Sets the currency symbol shown throughout the app. Does not convert values.
+      </div>
+      <FormField label="Display currency">
+        <select
+          className="form-input"
+          value={code}
+          onChange={e => {
+            setCurrency(e.target.value);
+            showToast('Currency updated', 'success');
+          }}
+        >
+          {currencies.map(c => (
+            <option key={c.code} value={c.code}>{c.label}</option>
+          ))}
+        </select>
+      </FormField>
+      <div style={{ fontSize: 11, color: 'var(--tx4)', marginTop: 4 }}>
+        Current: <strong>{label}</strong>
+      </div>
+    </div>
+  );
+}
+
 function AccountInfoSection({ profile }) {
   return (
     <div className="card">
@@ -181,6 +216,7 @@ export default function SettingsPage() {
         <div>
           <ProfileSection profile={profile} onSave={refreshProfile} />
           <PasswordSection />
+          <CurrencySection />
         </div>
         <div>
           <AccountInfoSection profile={profile} />

@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle, Building2 } from 'lucide-react';
 import { useProspect } from '../../hooks/useProspects';
 import { useDealStore } from '../../store/dealStore';
 import { LoadingSpinner } from '../../components/shared/FormField';
+import { useCurrency } from '../../hooks/useCurrency';
 
 /**
  * Convert Prospect → Deal
@@ -15,6 +16,7 @@ export default function P20QualifyConvert() {
   const navigate = useNavigate();
   const { data: prospect, isLoading } = useProspect(id);
   const { setInitiation, reset } = useDealStore();
+  const { symbol } = useCurrency();
 
   const handleConvert = () => {
     reset();
@@ -59,7 +61,7 @@ export default function P20QualifyConvert() {
         </div>
         {[
           ['Product interest', prospect.product_interest || '—'],
-          ['Estimated value', prospect.estimated_value ? `£${prospect.estimated_value.toLocaleString()}` : '—'],
+          ['Estimated value', prospect.estimated_value ? `${symbol}${prospect.estimated_value.toLocaleString()}` : '—'],
           ['Industry', prospect.industry || '—'],
           ['Stage', prospect.pipeline_stage],
         ].map(([k, v]) => (

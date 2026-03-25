@@ -3,6 +3,7 @@ import { FileText, Calendar, TrendingUp, ChevronRight, CreditCard, AlertCircle, 
 import { useCustomerContracts } from '../../hooks/useContracts';
 import { useAuth } from '../../auth/AuthContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
+import { useCurrency } from '../../hooks/useCurrency';
 
 const STATUS_META = {
   active:    { label: 'Active',    color: 'var(--green)',  bg: 'var(--green-l)' },
@@ -15,6 +16,7 @@ export default function P15CustomerDashboard() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: contracts = [], isLoading } = useCustomerContracts();
+  const { symbol } = useCurrency();
 
   const displayName = profile?.full_name?.split(' ')[0] || 'there';
   const activeContracts = contracts.filter(c => c.status === 'active');
@@ -27,7 +29,7 @@ export default function P15CustomerDashboard() {
   const kpis = [
     { label: 'Active agreements', value: activeContracts.length,    icon: <FileText size={18} />,    color: 'var(--blue)' },
     { label: 'Overdue payments',  value: overdueContracts.length,   icon: <AlertCircle size={18} />, color: overdueContracts.length > 0 ? 'var(--red)' : 'var(--green)' },
-    { label: 'Total outstanding', value: `£${(totalOutstanding / 1000).toFixed(1)}k`, icon: <TrendingUp size={18} />, color: 'var(--coral)' },
+    { label: 'Total outstanding', value: `${symbol}${(totalOutstanding / 1000).toFixed(1)}k`, icon: <TrendingUp size={18} />, color: 'var(--coral)' },
   ];
 
   if (isLoading) return <div className="page-loading"><LoadingSpinner size={24} /></div>;
@@ -84,7 +86,7 @@ export default function P15CustomerDashboard() {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>£{(c.monthly_payment || 0).toLocaleString()}/mo</div>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{symbol}{(c.monthly_payment || 0).toLocaleString()}/mo</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 3 }}>
                       {c.next_payment_date && <span style={{ fontSize: 10, color: 'var(--tx4)', display: 'flex', alignItems: 'center', gap: 3 }}><Calendar size={9} />{new Date(c.next_payment_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
                       <span style={{ fontSize: 10, fontWeight: 600, color: meta.color, background: meta.bg, borderRadius: 8, padding: '2px 6px' }}>{meta.label}</span>

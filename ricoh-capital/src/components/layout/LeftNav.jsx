@@ -4,7 +4,7 @@ import {
   ClipboardList, FolderOpen, ShieldCheck,
   ClipboardCheck, ScrollText, Home, Send,
   Settings, Download, BarChart3, CreditCard, UserCog,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Percent,
 } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { ZoroWordmark, ZoroMark } from '../shared/ZoroLogo';
@@ -59,6 +59,7 @@ const ADMIN_NAV = [
   {
     section: 'System',
     items: [
+      { to: '/admin/rates',  icon: <Percent size={ICON_SIZE} />,    label: 'Rate configuration' },
       { to: '/admin/users',  icon: <UserCog size={ICON_SIZE} />,    label: 'User management' },
       { to: '/admin/audit',  icon: <ScrollText size={ICON_SIZE} />, label: 'Audit log' },
       { to: '/settings',     icon: <Settings size={ICON_SIZE} />,   label: 'Settings' },

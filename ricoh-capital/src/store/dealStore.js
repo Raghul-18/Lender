@@ -30,6 +30,7 @@ export const useDealStore = create(
     deposit: 0,
     balloon: 0,
     rateType: 'Fixed',
+    apr: 7.2,
   },
   // Submitted deal ID (for confirmation page)
   submittedDealId: null,
@@ -49,10 +50,10 @@ export const useDealStore = create(
   }),
 
   getMonthlyPayment: () => {
-    const { assetValue, deposit, balloon, termMonths } = get().assetDetails;
+    const { assetValue, deposit, balloon, termMonths, apr } = get().assetDetails;
     const financed = assetValue - deposit - balloon;
     if (financed <= 0 || termMonths <= 0) return 0;
-    const r = 0.072 / 12;
+    const r = (apr ?? 7.2) / 100 / 12;
     return Math.round((financed * r) / (1 - Math.pow(1 + r, -termMonths)));
   },
 
@@ -63,7 +64,7 @@ export const useDealStore = create(
 
   reset: () => set({
     initiation: { customerName: '', customerEmail: '', productType: 'Asset Finance — Hire Purchase', originatorReference: makeRef(), preferredStartDate: '', notes: '' },
-    assetDetails: { assetType: 'Commercial vehicle', make: '', model: '', year: new Date().getFullYear(), assetValue: 0, termMonths: 36, deposit: 0, balloon: 0, rateType: 'Fixed' },
+    assetDetails: { assetType: 'Commercial vehicle', make: '', model: '', year: new Date().getFullYear(), assetValue: 0, termMonths: 36, deposit: 0, balloon: 0, rateType: 'Fixed', apr: 7.2 },
     submittedDealId: null,
     submittedRefNumber: null,
   }),
