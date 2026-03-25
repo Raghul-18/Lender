@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { db, supabase, uploadDocument, logAudit } from '../lib/supabase';
 import { keys } from '../lib/queryClient';
 import { useAuth } from '../auth/AuthContext';
@@ -167,22 +166,25 @@ export function useDocuments(applicationId) {
 export function useVerificationChecks(applicationId) {
   const qc = useQueryClient();
 
-  // Proper subscription lifecycle — created and torn down with the component
-  useEffect(() => {
-    if (!applicationId) return;
-    const channel = supabase
-      .channel(`checks-${applicationId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'verification_checks',
-        filter: `application_id=eq.${applicationId}`,
-      }, () => {
-        qc.invalidateQueries({ queryKey: keys.checks(applicationId) });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [applicationId, qc]);
+  useQuery({
+    queryKey: ['checks-subscription', applicationId],
+    queryFn: async () => {
+      const channel = supabase
+        .channel(`checks-${applicationId}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'verification_checks',
+          filter: `application_id=eq.${applicationId}`,
+        }, () => {
+          qc.invalidateQueries({ queryKey: keys.checks(applicationId) });
+        })
+        .subscribe();
+      return () => supabase.removeChannel(channel);
+    },
+    enabled: !!applicationId,
+    staleTime: Infinity,
+  });
 
   return useQuery({
     queryKey: keys.checks(applicationId),
@@ -195,8 +197,7 @@ export function useVerificationChecks(applicationId) {
       return data || [];
     },
     enabled: !!applicationId,
-    // Realtime handles live updates — no need to poll every 5 s
-    refetchOnWindowFocus: true,
+    refetchInterval: 5000,
   });
 }
 

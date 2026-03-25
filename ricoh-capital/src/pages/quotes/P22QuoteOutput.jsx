@@ -6,7 +6,6 @@ import { useAppContext } from '../../context/AppContext';
 import { useDealStore } from '../../store/dealStore';
 import { LoadingSpinner } from '../../components/shared/FormField';
 import { ZoroMark } from '../../components/shared/ZoroLogo';
-import { useCurrency } from '../../hooks/useCurrency';
 
 const STATUS_META = {
   draft:    { label: 'Draft',    color: 'var(--tx3)' },
@@ -19,7 +18,6 @@ const STATUS_META = {
 function QuoteCard({ quote, onSend, onAccept, onDecline }) {
   if (!quote) return null;
   const sm = STATUS_META[quote.status] || STATUS_META.draft;
-  const { symbol } = useCurrency();
 
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--bdr)', borderRadius: 'var(--rxl)', overflow: 'hidden' }}>
@@ -45,7 +43,7 @@ function QuoteCard({ quote, onSend, onAccept, onDecline }) {
       <div style={{ padding: '24px 28px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, fontSize: 12, color: 'var(--tx3)' }}>
           <div>Asset type: <strong style={{ color: 'var(--tx1)' }}>{quote.asset_type}</strong></div>
-          <div>Asset value: <strong style={{ color: 'var(--tx1)' }}>{symbol}{(quote.asset_value || 0).toLocaleString()}</strong></div>
+          <div>Asset value: <strong style={{ color: 'var(--tx1)' }}>£{(quote.asset_value || 0).toLocaleString()}</strong></div>
           <div>Valid until: <strong style={{ color: 'var(--tx1)' }}>{quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-GB') : '—'}</strong></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             Status: <span style={{ fontWeight: 700, color: sm.color }}>{sm.label}</span>
@@ -64,19 +62,19 @@ function QuoteCard({ quote, onSend, onAccept, onDecline }) {
                 <div style={{ fontWeight: 700, fontSize: 14 }}>Option {i + 1}</div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
                   {sc.termMonths} months · {sc.aprPct}% APR · {sc.rateType} rate
-                  {sc.deposit > 0 && ` · ${symbol}${sc.deposit.toLocaleString()} deposit`}
+                  {sc.deposit > 0 && ` · £${sc.deposit.toLocaleString()} deposit`}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 28, fontWeight: 800, color: i === 0 ? 'var(--coral)' : 'var(--tx1)' }}>
-                  {symbol}{(sc.monthlyPayment || calcMonthly(quote.asset_value, sc.deposit, sc.termMonths, sc.aprPct)).toLocaleString()}
+                  £{(sc.monthlyPayment || calcMonthly(quote.asset_value, sc.deposit, sc.termMonths, sc.aprPct)).toLocaleString()}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--tx3)' }}>per month</div>
               </div>
             </div>
             <div style={{ borderTop: '1px solid var(--bdr)', marginTop: 12, paddingTop: 10, display: 'flex', gap: 24, fontSize: 12, color: 'var(--tx3)' }}>
-              <div>Total payable: <strong style={{ color: 'var(--tx1)' }}>{symbol}{(sc.totalPayable || 0).toLocaleString()}</strong></div>
-              <div>Amount financed: <strong style={{ color: 'var(--tx1)' }}>{symbol}{((quote.asset_value || 0) - (sc.deposit || 0)).toLocaleString()}</strong></div>
+              <div>Total payable: <strong style={{ color: 'var(--tx1)' }}>£{(sc.totalPayable || 0).toLocaleString()}</strong></div>
+              <div>Amount financed: <strong style={{ color: 'var(--tx1)' }}>£{((quote.asset_value || 0) - (sc.deposit || 0)).toLocaleString()}</strong></div>
             </div>
           </div>
         ))}

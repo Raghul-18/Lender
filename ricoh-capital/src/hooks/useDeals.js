@@ -3,7 +3,6 @@ import { db, logAudit, supabase } from '../lib/supabase';
 import { keys } from '../lib/queryClient';
 import { useAuth } from '../auth/AuthContext';
 import { useDealStore } from '../store/dealStore';
-import { getCurrencySymbol } from '../store/currencyStore';
 
 export function useDeals() {
   const { user } = useAuth();
@@ -64,7 +63,7 @@ export function useSubmitDeal() {
         balloon: assetDetails.balloon,
         rate_type: assetDetails.rateType,
         monthly_payment: monthly,
-        apr: assetDetails.apr ?? 7.2,
+        apr: 7.2,
         total_payable: total,
         status: 'submitted',
       };
@@ -79,7 +78,7 @@ export function useSubmitDeal() {
       await db.notifications().insert({
         user_id: user.id,
         title: `Deal submitted — ${data.reference_number}`,
-        body: `${initiation.customerName} · ${initiation.productType} · ${getCurrencySymbol()}${monthly.toLocaleString()}/mo`,
+        body: `${initiation.customerName} · ${initiation.productType} · £${monthly.toLocaleString()}/mo`,
         type: 'deal_update',
         related_id: data.id,
       });

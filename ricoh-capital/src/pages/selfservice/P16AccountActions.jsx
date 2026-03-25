@@ -6,7 +6,6 @@ import { useAuth } from '../../auth/AuthContext';
 import { db } from '../../lib/supabase';
 import { useAppContext } from '../../context/AppContext';
 import { FormField, LoadingSpinner } from '../../components/shared/FormField';
-import { useCurrency } from '../../hooks/useCurrency';
 
 function useSubmitServiceRequest() {
   const { user } = useAuth();
@@ -39,7 +38,6 @@ export default function P16AccountActions() {
   const { showToast } = useAppContext();
   const { data: contracts = [], isLoading } = useCustomerContracts();
   const { submit, loading: submitting } = useSubmitServiceRequest();
-  const { symbol } = useCurrency();
 
   const [selectedContract, setSelectedContract] = useState('');
   const [settlementNote, setSettlementNote] = useState('');
@@ -119,7 +117,7 @@ export default function P16AccountActions() {
                 <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', border: '1px solid var(--bdr)', borderRadius: 'var(--rl)' }}>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 600 }}>{c.asset_description}</div>
-                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{c.reference_number} · {symbol}{(c.monthly_payment || 0).toLocaleString()}/mo</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{c.reference_number} · £{(c.monthly_payment || 0).toLocaleString()}/mo</div>
                   </div>
                   <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => navigate(`/portal/contracts/${c.id}`)}>
                     View <RefreshCw size={10} />

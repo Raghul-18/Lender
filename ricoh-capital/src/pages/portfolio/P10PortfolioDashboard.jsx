@@ -4,7 +4,6 @@ import { RefreshCw, Download, Plus, FileText, AlertCircle, Calendar, TrendingUp 
 import { useContracts, usePortfolioStats, exportContractsCSV } from '../../hooks/useContracts';
 import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
-import { useCurrency } from '../../hooks/useCurrency';
 
 const STATUS_META = {
   active:    { label: 'Active',    color: 'var(--green)',  bg: 'var(--green-l)' },
@@ -19,7 +18,6 @@ export default function P10PortfolioDashboard() {
   const { showToast } = useAppContext();
   const { data: contracts = [], isLoading, error, refetch } = useContracts();
   const stats = usePortfolioStats(contracts);
-  const { symbol } = useCurrency();
 
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -54,7 +52,7 @@ export default function P10PortfolioDashboard() {
     { label: 'Active contracts',     value: stats.active,    icon: <FileText size={18} />,    color: 'var(--green)' },
     { label: 'Overdue',              value: stats.overdue,   icon: <AlertCircle size={18} />, color: 'var(--red)' },
     { label: 'Maturing (90 days)',   value: stats.maturing,  icon: <Calendar size={18} />,    color: 'var(--amber)' },
-    { label: 'Total portfolio value', value: `${symbol}${(stats.totalValue / 1000000).toFixed(2)}M`, icon: <TrendingUp size={18} />, color: 'var(--blue)' },
+    { label: 'Total portfolio value', value: `£${(stats.totalValue / 1000000).toFixed(2)}M`, icon: <TrendingUp size={18} />, color: 'var(--blue)' },
   ];
 
   return (
@@ -156,8 +154,8 @@ export default function P10PortfolioDashboard() {
                     <td><span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: 'var(--coral)' }}>{c.reference_number}</span></td>
                     <td style={{ fontWeight: 600, fontSize: 13 }}>{c.customer_name}</td>
                     <td style={{ fontSize: 12, color: 'var(--tx3)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.asset_description}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 700 }}>{symbol}{(c.monthly_payment || 0).toLocaleString()}</td>
-                    <td style={{ textAlign: 'right', color: 'var(--tx3)', fontSize: 12 }}>{symbol}{(c.asset_value || 0).toLocaleString()}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700 }}>£{(c.monthly_payment || 0).toLocaleString()}</td>
+                    <td style={{ textAlign: 'right', color: 'var(--tx3)', fontSize: 12 }}>£{(c.asset_value || 0).toLocaleString()}</td>
                     <td style={{ fontSize: 12, color: 'var(--tx3)' }}>{c.term_months}mo</td>
                     <td style={{ fontSize: 12 }}>
                       {c.next_payment_date ? new Date(c.next_payment_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}

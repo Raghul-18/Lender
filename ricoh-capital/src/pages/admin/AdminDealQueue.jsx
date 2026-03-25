@@ -7,7 +7,6 @@ import { useAllDeals, useApproveDeal, useRejectDeal, useSetDealUnderReview } fro
 import { useAllAmendments, useReviewAmendment } from '../../hooks/useAmendments';
 import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
-import { useCurrency } from '../../hooks/useCurrency';
 
 const AMENDMENT_TYPE_LABELS = {
   term_extension:  'Term extension',
@@ -102,7 +101,6 @@ function DealCard({ deal }) {
   const sm = STATUS_META[deal.status] || STATUS_META.submitted;
   const originator = deal.originator || {};
   const canDecide = deal.status === 'submitted' || deal.status === 'under_review';
-  const { symbol } = useCurrency();
 
   const handleApprove = async () => {
     try {
@@ -154,8 +152,8 @@ function DealCard({ deal }) {
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--coral)' }}>{symbol}{(deal.monthly_payment || 0).toLocaleString()}/mo</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{symbol}{(deal.asset_value || 0).toLocaleString()} asset</div>
+          <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--coral)' }}>£{(deal.monthly_payment || 0).toLocaleString()}/mo</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>£{(deal.asset_value || 0).toLocaleString()} asset</div>
         </div>
         <div style={{ color: 'var(--tx4)', flexShrink: 0 }}>
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -187,7 +185,7 @@ function DealCard({ deal }) {
               <Row label="Make" value={deal.asset_make} />
               <Row label="Model" value={deal.asset_model} />
               <Row label="Year" value={deal.asset_year} />
-              <Row label="Value" value={`${symbol}${(deal.asset_value || 0).toLocaleString()}`} />
+              <Row label="Value" value={`£${(deal.asset_value || 0).toLocaleString()}`} />
             </div>
 
             {/* Finance */}
@@ -195,13 +193,13 @@ function DealCard({ deal }) {
               <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.6px', color: 'var(--tx4)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <CreditCard size={11} /> Finance
               </div>
-              <Row label="Monthly" value={`${symbol}${(deal.monthly_payment || 0).toLocaleString()}`} />
+              <Row label="Monthly" value={`£${(deal.monthly_payment || 0).toLocaleString()}`} />
               <Row label="Term" value={`${deal.term_months} months`} />
-              <Row label="Deposit" value={deal.deposit ? `${symbol}${deal.deposit.toLocaleString()}` : 'None'} />
-              <Row label="Balloon" value={deal.balloon ? `${symbol}${deal.balloon.toLocaleString()}` : 'None'} />
+              <Row label="Deposit" value={deal.deposit ? `£${deal.deposit.toLocaleString()}` : 'None'} />
+              <Row label="Balloon" value={deal.balloon ? `£${deal.balloon.toLocaleString()}` : 'None'} />
               <Row label="APR" value={`${deal.apr}%`} />
               <Row label="Rate type" value={deal.rate_type} />
-              <Row label="Total payable" value={`${symbol}${(deal.total_payable || 0).toLocaleString()}`} />
+              <Row label="Total payable" value={`£${(deal.total_payable || 0).toLocaleString()}`} />
             </div>
           </div>
 

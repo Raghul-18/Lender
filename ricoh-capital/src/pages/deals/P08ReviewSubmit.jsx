@@ -5,7 +5,6 @@ import { useSubmitDeal } from '../../hooks/useDeals';
 import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../auth/AuthContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
-import { useCurrency } from '../../hooks/useCurrency';
 
 export default function P08ReviewSubmit() {
   const navigate = useNavigate();
@@ -21,7 +20,6 @@ export default function P08ReviewSubmit() {
 
   const monthly = getMonthlyPayment();
   const total = getTotalPayable();
-  const { symbol } = useCurrency();
 
   const handleSubmit = async () => {
     try {
@@ -81,15 +79,15 @@ export default function P08ReviewSubmit() {
             ['Type', assetDetails.assetType],
             ['Make & model', `${assetDetails.make} ${assetDetails.model}`],
             ['Year', assetDetails.year],
-            ['Asset value', `${symbol}${(assetDetails.assetValue || 0).toLocaleString()}`],
+            ['Asset value', `£${(assetDetails.assetValue || 0).toLocaleString()}`],
           ]} />
           <Section title="Finance structure" rows={[
             ['Term', `${assetDetails.termMonths} months`],
             ['Rate type', assetDetails.rateType],
-            ['APR', `${assetDetails.apr ?? 7.2}%`],
-            ['Deposit', assetDetails.deposit ? `${symbol}${assetDetails.deposit.toLocaleString()}` : 'None'],
-            ['Balloon', assetDetails.balloon ? `${symbol}${assetDetails.balloon.toLocaleString()}` : 'None'],
-            ['Amount financed', `${symbol}${((assetDetails.assetValue || 0) - (assetDetails.deposit || 0) - (assetDetails.balloon || 0)).toLocaleString()}`],
+            ['APR', '7.2%'],
+            ['Deposit', assetDetails.deposit ? `£${assetDetails.deposit.toLocaleString()}` : 'None'],
+            ['Balloon', assetDetails.balloon ? `£${assetDetails.balloon.toLocaleString()}` : 'None'],
+            ['Amount financed', `£${((assetDetails.assetValue || 0) - (assetDetails.deposit || 0) - (assetDetails.balloon || 0)).toLocaleString()}`],
           ]} />
         </div>
 
@@ -98,11 +96,11 @@ export default function P08ReviewSubmit() {
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Finance summary</div>
             <div style={{ textAlign: 'center', padding: '16px 0', borderBottom: '1px solid var(--bdr)', marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Monthly payment</div>
-              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--coral)' }}>{symbol}{monthly.toLocaleString()}</div>
+              <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--coral)' }}>£{monthly.toLocaleString()}</div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
               <span style={{ color: 'var(--tx3)' }}>Total payable</span>
-              <span style={{ fontWeight: 600 }}>{symbol}{total.toLocaleString()}</span>
+              <span style={{ fontWeight: 600 }}>£{total.toLocaleString()}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
               <span style={{ color: 'var(--tx3)' }}>Over</span>

@@ -4,7 +4,6 @@ import { ArrowLeft, Plus, Phone, Mail, MessageSquare, FileText, CheckCircle, Arr
 import { useProspect, useProspectActivities, useCreateActivity, useUpdateProspect, useDeleteProspect } from '../../hooks/useProspects';
 import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
-import { useCurrency } from '../../hooks/useCurrency';
 
 const ACTIVITY_ICON = {
   call:         <Phone size={14} />,
@@ -34,7 +33,6 @@ export default function P19ProspectProfile() {
   const createActivity = useCreateActivity(id);
   const updateProspect = useUpdateProspect(id);
   const deleteProspect = useDeleteProspect();
-  const { symbol } = useCurrency();
 
   const [newNote, setNewNote] = useState('');
   const [actType, setActType] = useState('note');
@@ -178,7 +176,7 @@ export default function P19ProspectProfile() {
               ['Email', prospect.contact_email],
               ['Phone', prospect.contact_phone],
               ['Product interest', prospect.product_interest],
-              ['Est. value', prospect.estimated_value ? `${symbol}${prospect.estimated_value.toLocaleString()}` : null],
+              ['Est. value', prospect.estimated_value ? `£${prospect.estimated_value.toLocaleString()}` : null],
               ['Created', new Date(prospect.created_at).toLocaleDateString('en-GB')],
             ].filter(([, v]) => v).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, paddingBottom: 8, borderBottom: '1px solid var(--bdr)', marginBottom: 8 }}>

@@ -5,8 +5,6 @@ import { Check } from 'lucide-react';
 import { useDealStore } from '../../store/dealStore';
 import { assetDetailsSchema } from '../../schemas';
 import { FormField } from '../../components/shared/FormField';
-import { useCurrency } from '../../hooks/useCurrency';
-import { useProductRates, findRate } from '../../hooks/useProductRates';
 
 const ASSET_TYPES = [
   'Commercial vehicle', 'Plant & machinery', 'Medical equipment',
@@ -20,8 +18,6 @@ const TERMS = [12, 18, 24, 36, 48, 60, 72, 84, 96, 120];
 export default function P07AssetDetails() {
   const navigate = useNavigate();
   const { assetDetails, setAssetDetails, getMonthlyPayment, getTotalPayable, initiation } = useDealStore();
-  const { symbol } = useCurrency();
-  const { data: rates = [] } = useProductRates(true);
 
   if (!initiation.customerName) {
     navigate('/deals/new');
@@ -42,14 +38,11 @@ export default function P07AssetDetails() {
 
   const watchedValues = watch(['assetValue', 'deposit', 'balloon', 'termMonths']);
   const [watchedAssetValue, watchedDeposit, watchedBalloon, watchedTermMonths] = watchedValues;
-  const term = watchedTermMonths || 36;
-
-  // Look up APR from product_rates table; fall back to 7.2
-  const liveApr = findRate(rates, initiation.productType, term) ?? 7.2;
 
   // Live payment calculation
   const financed = (watchedAssetValue || 0) - (watchedDeposit || 0) - (watchedBalloon || 0);
-  const r = liveApr / 100 / 12;
+  const r = 0.072 / 12;
+  const term = watchedTermMonths || 36;
   const monthly = financed > 0 && term > 0
     ? Math.round((financed * r) / (1 - Math.pow(1 + r, -term)))
     : 0;
@@ -63,7 +56,6 @@ export default function P07AssetDetails() {
       balloon:     Number(data.balloon),
       termMonths:  Number(data.termMonths),
       year:        Number(data.year),
-      apr:         liveApr,
     });
     navigate('/deals/review');
   };
@@ -112,7 +104,7 @@ export default function P07AssetDetails() {
                   {YEARS.map(y => <option key={y}>{y}</option>)}
                 </select>
               </FormField>
-              <FormField label={`Asset value (${symbol})`} required error={errors.assetValue?.message}>
+              <FormField label="Asset value (£)" required error={errors.assetValue?.message}>
                 <input {...register('assetValue', { valueAsNumber: true })} className="form-input" type="number" min="0" step="1000" placeholder="42000" />
               </FormField>
             </div>
@@ -134,10 +126,10 @@ export default function P07AssetDetails() {
               </FormField>
             </div>
             <div className="two-col-equal" style={{ gap: '0 12px' }}>
-              <FormField label={`Deposit (${symbol})`} error={errors.deposit?.message}>
+              <FormField label="Deposit (£)" error={errors.deposit?.message}>
                 <input {...register('deposit', { valueAsNumber: true })} className="form-input" type="number" min="0" step="100" placeholder="0" />
               </FormField>
-              <FormField label={`Balloon payment (${symbol})`} error={errors.balloon?.message}>
+              <FormField label="Balloon payment (£)" error={errors.balloon?.message}>
                 <input {...register('balloon', { valueAsNumber: true })} className="form-input" type="number" min="0" step="100" placeholder="0" />
               </FormField>
             </div>
@@ -151,11 +143,11 @@ export default function P07AssetDetails() {
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>Live calculation</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                ['Asset value', `${symbol}${(watchedAssetValue || 0).toLocaleString()}`],
-                ['Less deposit', `${symbol}${(watchedDeposit || 0).toLocaleString()}`],
-                ['Less balloon', `${symbol}${(watchedBalloon || 0).toLocaleString()}`],
-                ['Amount financed', `${symbol}${Math.max(0, financed).toLocaleString()}`],
-                ['APR (fixed)', `${liveApr}%`],
+                ['Asset value', `£${(watchedAssetValue || 0).toLocaleString()}`],
+                ['Less deposit', `£${(watchedDeposit || 0).toLocaleString()}`],
+                ['Less balloon', `£${(watchedBalloon || 0).toLocaleString()}`],
+                ['Amount financed', `£${Math.max(0, financed).toLocaleString()}`],
+                ['APR (fixed)', '7.2%'],
                 ['Term', `${term} months`],
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
@@ -166,12 +158,12 @@ export default function P07AssetDetails() {
               <div style={{ borderTop: '1px solid var(--bdr)', paddingTop: 12, marginTop: 4 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                   <span style={{ fontSize: 12, color: 'var(--tx3)' }}>Total payable</span>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{symbol}{totalPayable.toLocaleString()}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>£{totalPayable.toLocaleString()}</span>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Monthly payment</div>
                   <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--coral)' }}>
-                    {symbol}{monthly.toLocaleString()}
+                    £{monthly.toLocaleString()}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--tx3)' }}>/ month</div>
                 </div>

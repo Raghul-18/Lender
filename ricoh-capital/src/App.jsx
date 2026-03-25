@@ -23,7 +23,6 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminDealQueue from './pages/admin/AdminDealQueue';
 import AuditLogPage from './pages/admin/AuditLogPage';
 import AdminUserManagement from './pages/admin/AdminUserManagement';
-import AdminRatesPage from './pages/admin/AdminRatesPage';
 
 // Portfolio
 import P10PortfolioDashboard from './pages/portfolio/P10PortfolioDashboard';
@@ -132,11 +131,6 @@ export default function App() {
                 <Route path="/admin/users" element={
                   <ProtectedRoute roles={['admin']}>
                     <AdminUserManagement />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/rates" element={
-                  <ProtectedRoute roles={['admin']}>
-                    <AdminRatesPage />
                   </ProtectedRoute>
                 } />
 

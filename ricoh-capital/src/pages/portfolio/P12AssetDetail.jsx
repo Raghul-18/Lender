@@ -5,8 +5,6 @@ import { useContract, usePaymentSchedule, useMarkPaymentPaid, useCancelContract,
 import { useAuth } from '../../auth/AuthContext';
 import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
-import { useCurrency } from '../../hooks/useCurrency';
-import { SignContractButton } from '../../components/shared/ContractSignModal';
 
 const STATUS_META = {
   active:     { label: 'Active',    color: 'var(--green)',  dot: '#22c55e' },
@@ -28,7 +26,6 @@ export default function P12AssetDetail() {
   const navigate = useNavigate();
   const { isAdmin, isCustomer } = useAuth();
   const { showToast } = useAppContext();
-  const { symbol } = useCurrency();
   const { data: contract, isLoading: contractLoading } = useContract(id);
   const { data: schedule = [], isLoading: scheduleLoading } = usePaymentSchedule(id);
   const markPaid = useMarkPaymentPaid();
@@ -86,9 +83,6 @@ export default function P12AssetDetail() {
           </div>
         </div>
 
-        {/* Customer: sign contract */}
-        {isCustomer && <SignContractButton contract={contract} />}
-
         {/* Admin: cancel contract */}
         {isAdmin && contract.status !== 'cancelled' && contract.status !== 'completed' && (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -114,10 +108,10 @@ export default function P12AssetDetail() {
       {/* KPI row */}
       <div className="kpi-row">
         {[
-          { label: 'Monthly payment', value: `${symbol}${(contract.monthly_payment || 0).toLocaleString()}` },
-          { label: 'Asset value', value: `${symbol}${(contract.asset_value || 0).toLocaleString()}` },
-          { label: 'Total paid', value: `${symbol}${totalPaid.toLocaleString()}` },
-          { label: 'Outstanding', value: `${symbol}${outstanding.toLocaleString()}` },
+          { label: 'Monthly payment', value: `£${(contract.monthly_payment || 0).toLocaleString()}` },
+          { label: 'Asset value', value: `£${(contract.asset_value || 0).toLocaleString()}` },
+          { label: 'Total paid', value: `£${totalPaid.toLocaleString()}` },
+          { label: 'Outstanding', value: `£${outstanding.toLocaleString()}` },
         ].map(k => (
           <div key={k.label} className="metric-card">
             <div className="metric-value" style={{ fontSize: 20 }}>{k.value}</div>
@@ -134,7 +128,7 @@ export default function P12AssetDetail() {
             {[
               ['Reference', contract.reference_number],
               ['Asset', contract.asset_description],
-              ['Asset value', `${symbol}${(contract.asset_value || 0).toLocaleString()}`],
+              ['Asset value', `£${(contract.asset_value || 0).toLocaleString()}`],
               ['Term', `${contract.term_months} months`],
               ['Start date', contract.start_date ? new Date(contract.start_date).toLocaleDateString('en-GB') : '—'],
               ['End date', contract.end_date ? new Date(contract.end_date).toLocaleDateString('en-GB') : '—'],
@@ -197,10 +191,10 @@ export default function P12AssetDetail() {
                         <td style={{ color: 'var(--tx4)', fontSize: 11 }}>{p.payment_number}</td>
                         <td style={{ fontSize: 12 }}>{new Date(p.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                         <td style={{ textAlign: 'right', fontWeight: 600, fontSize: 12 }}>
-                          {symbol}{(p.amount || 0).toLocaleString()}
+                          £{(p.amount || 0).toLocaleString()}
                           {(p.extra_principal > 0) && (
                             <div style={{ fontSize: 10, color: 'var(--green)', fontWeight: 400 }}>
-                              +{symbol}{p.extra_principal.toLocaleString()} principal
+                              +£{p.extra_principal.toLocaleString()} principal
                             </div>
                           )}
                         </td>
@@ -259,7 +253,6 @@ function PayNowModal({ payment, contractId, schedule, onClose }) {
   const [extraError, setExtraError] = useState('');
   const payNow = useCustomerPayNow();
   const { showToast } = useAppContext();
-  const { symbol } = useCurrency();
 
   const dueAmount = payment.amount || 0;
   const extra = parseFloat(extraAmount) || 0;
@@ -279,7 +272,7 @@ function PayNowModal({ payment, contractId, schedule, onClose }) {
       return;
     }
     if (payExtra && extra > currentRemainingTotal && remainingCount > 0) {
-      setExtraError(`Maximum extra is ${symbol}${currentRemainingTotal.toLocaleString()} (full remaining balance)`);
+      setExtraError(`Maximum extra is £${currentRemainingTotal.toLocaleString()} (full remaining balance)`);
       return;
     }
     try {
@@ -319,7 +312,7 @@ function PayNowModal({ payment, contractId, schedule, onClose }) {
         }}>
           <span style={{ fontSize: 12, color: 'var(--tx3)' }}>Amount due</span>
           <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--coral)' }}>
-            {symbol}{dueAmount.toLocaleString()}
+            £{dueAmount.toLocaleString()}
           </span>
         </div>
 
@@ -349,7 +342,7 @@ function PayNowModal({ payment, contractId, schedule, onClose }) {
           {payExtra && (
             <div style={{ marginTop: 12 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 5 }}>
-                Extra amount ({symbol})
+                Extra amount (£)
               </div>
               <input
                 className="form-input"
@@ -382,12 +375,12 @@ function PayNowModal({ payment, contractId, schedule, onClose }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--tx2)', marginBottom: 3 }}>
                     <span>Current monthly</span>
                     <span style={{ textDecoration: extra > 0 ? 'line-through' : 'none', color: 'var(--tx3)' }}>
-                      {symbol}{(remainingPayments[0]?.amount || 0).toLocaleString()}
+                      £{(remainingPayments[0]?.amount || 0).toLocaleString()}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--green)', fontWeight: 700 }}>
                     <span>New monthly</span>
-                    <span>{symbol}{newMonthly.toLocaleString()}</span>
+                    <span>£{newMonthly.toLocaleString()}</span>
                   </div>
                   {extra >= currentRemainingTotal && (
                     <div style={{ marginTop: 6, fontSize: 11, color: 'var(--amber)', fontWeight: 600 }}>
@@ -408,7 +401,7 @@ function PayNowModal({ payment, contractId, schedule, onClose }) {
         }}>
           <span style={{ fontSize: 12, fontWeight: 600 }}>Total to pay</span>
           <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--coral)' }}>
-            {symbol}{totalAmount.toLocaleString()}
+            £{totalAmount.toLocaleString()}
           </span>
         </div>
 
@@ -421,7 +414,7 @@ function PayNowModal({ payment, contractId, schedule, onClose }) {
             style={{ minWidth: 150 }}
           >
             {payNow.isPending ? <LoadingSpinner size={13} /> : <CreditCard size={13} />}
-            Pay {symbol}{totalAmount.toLocaleString()}
+            Pay £{totalAmount.toLocaleString()}
           </button>
         </div>
       </div>

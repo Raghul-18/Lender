@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, FileText, ChevronRight, Clock, CheckCircle, Send } from 'lucide-react';
 import { useQuotes } from '../../hooks/useQuotes';
 import { LoadingSpinner } from '../../components/shared/FormField';
-import { useCurrency } from '../../hooks/useCurrency';
 
 const STATUS_META = {
   draft:    { label: 'Draft',    color: 'var(--tx3)',   bg: 'var(--bg)',        icon: <Clock size={12} /> },
@@ -14,7 +13,6 @@ const STATUS_META = {
 export default function QuotesListPage() {
   const navigate = useNavigate();
   const { data: quotes = [], isLoading, error } = useQuotes();
-  const { symbol } = useCurrency();
 
   return (
     <div className="page">
@@ -62,7 +60,7 @@ export default function QuotesListPage() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  {q.asset_value && <div style={{ fontWeight: 700, fontSize: 13 }}>{symbol}{q.asset_value.toLocaleString()}</div>}
+                  {q.asset_value && <div style={{ fontWeight: 700, fontSize: 13 }}>£{q.asset_value.toLocaleString()}</div>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'flex-end', marginTop: 3 }}>
                     <span style={{ fontSize: 10, color: meta.color, background: meta.bg, borderRadius: 8, padding: '2px 7px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                       {meta.icon} {meta.label}
