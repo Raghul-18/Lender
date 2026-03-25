@@ -54,7 +54,7 @@ create policy "Admins can manage rates"
 -- ── updated_at trigger ────────────────────────────────────────
 create trigger set_product_rates_updated_at
   before update on public.product_rates
-  for each row execute function public.set_updated_at();
+  for each row execute function public.handle_updated_at();
 
 -- ── DEFAULT SEED RATES ────────────────────────────────────────
 insert into public.product_rates (product_type, rate_type, min_term_months, max_term_months, apr_pct) values
