@@ -88,9 +88,68 @@ export async function downloadDocumentBlob(filePath) {
 
 // ── Utility: call admin Edge Functions ───────────────────────
 export async function invokeAdminFunction(name, body = {}) {
-  const { data, error } = await supabase.functions.invoke(name, { body });
-  if (error) throw error;
-  return data;
+  const url = `${supabaseUrl}/functions/v1/${name}`;
+  const TIMEOUT_MS = 20000;
+
+  const getAccessToken = async () => {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token;
+  };
+
+  const callFunction = async (token) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      let responseBody;
+      try { responseBody = await res.json(); } catch { responseBody = null; }
+
+      if (!res.ok) {
+        const detail = responseBody?.error || responseBody?.message || res.statusText;
+        throw new Error(`${name} failed (HTTP ${res.status}): ${detail}`);
+      }
+
+      return responseBody;
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        throw new Error(`${name} timed out after ${TIMEOUT_MS / 1000}s`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  let token = await getAccessToken();
+  console.log(`[invokeAdminFunction] ${name} — calling with token: ${token ? 'yes' : 'MISSING'}`);
+
+  try {
+    return await callFunction(token);
+  } catch (firstErr) {
+    console.warn(`[invokeAdminFunction] ${name} first attempt failed:`, firstErr.message);
+
+    if (firstErr.message.includes('HTTP 401') || firstErr.message.toLowerCase().includes('invalid jwt')) {
+      console.log(`[invokeAdminFunction] ${name} — refreshing session and retrying…`);
+      const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+      if (!refreshErr && refreshed?.session?.access_token) {
+        token = refreshed.session.access_token;
+        return await callFunction(token);
+      }
+    }
+
+    throw firstErr;
+  }
 }
 
 // ── Utility: log audit event ──────────────────────────────

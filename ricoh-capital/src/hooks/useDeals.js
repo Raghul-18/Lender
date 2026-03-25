@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, logAudit, supabase } from '../lib/supabase';
+import { db, invokeAdminFunction, logAudit } from '../lib/supabase';
 import { keys } from '../lib/queryClient';
 import { useAuth } from '../auth/AuthContext';
 import { useDealStore } from '../store/dealStore';
@@ -193,19 +193,21 @@ export function useApproveDeal() {
 
       // 7. Invite customer to portal if an email was provided
       const emailToInvite = customerEmail || deal.customer_email;
+      let inviteErrorMessage = null;
+      let customerInviteSent = false;
       if (emailToInvite) {
         try {
-          await supabase.functions.invoke('invite-customer', {
-            body: {
-              email: emailToInvite,
-              customerName: deal.customer_name,
-              contractId: contract.id,
-              dealId,
-            },
+          await invokeAdminFunction('invite-customer', {
+            email: emailToInvite,
+            customerName: deal.customer_name,
+            contractId: contract.id,
+            dealId,
           });
+          customerInviteSent = true;
         } catch (inviteErr) {
           // Non-fatal: log but don't fail the approval
-          console.warn('Customer invite failed (deploy Edge Function to enable):', inviteErr);
+          inviteErrorMessage = inviteErr?.message || 'Failed to send customer invite email';
+          console.warn('Customer invite failed (check Edge Function deployment/secrets):', inviteErr);
         }
       }
 
@@ -213,8 +215,16 @@ export function useApproveDeal() {
         contract_id: contract.id,
         reviewed_by: user.id,
         customer_invited: !!emailToInvite,
+        customer_invite_sent: customerInviteSent,
+        customer_invite_error: inviteErrorMessage,
       });
-      return { deal, contract };
+      return {
+        deal,
+        contract,
+        customerEmail: emailToInvite || null,
+        customerInviteSent,
+        customerInviteError: inviteErrorMessage,
+      };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.adminDeals() });
@@ -271,6 +281,53 @@ export function useSetDealUnderReview() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.adminDeals() }),
+  });
+}
+
+// ── Admin: retry customer portal invite for approved deal ──────
+export function useRetryCustomerInvite() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ dealId, customerEmail }) => {
+      if (!dealId) throw new Error('dealId is required');
+      if (!customerEmail) throw new Error('Customer email is required');
+
+      const { data: deal, error: dealErr } = await db.deals()
+        .select('id, customer_name')
+        .eq('id', dealId)
+        .single();
+      if (dealErr || !deal) throw dealErr || new Error('Deal not found');
+
+      const { data: contract, error: contractErr } = await db.contracts()
+        .select('id')
+        .eq('deal_id', dealId)
+        .single();
+      if (contractErr || !contract) throw contractErr || new Error('Contract not found for this deal');
+
+      const { error: emailUpdateErr } = await db.deals()
+        .update({ customer_email: customerEmail })
+        .eq('id', dealId);
+      if (emailUpdateErr) throw emailUpdateErr;
+
+      await invokeAdminFunction('invite-customer', {
+        email: customerEmail,
+        customerName: deal.customer_name,
+        contractId: contract.id,
+        dealId,
+      });
+
+      await logAudit('deal', dealId, 'customer_invite_retried', {
+        reviewed_by: user?.id,
+        customer_email: customerEmail,
+      });
+
+      return { customerEmail };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.adminDeals() });
+    },
   });
 }
 

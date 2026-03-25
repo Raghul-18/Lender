@@ -3,7 +3,7 @@ import {
   CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
   Building2, Wrench, CreditCard, Search, Send, Edit,
 } from 'lucide-react';
-import { useAllDeals, useApproveDeal, useRejectDeal, useSetDealUnderReview } from '../../hooks/useDeals';
+import { useAllDeals, useApproveDeal, useRejectDeal, useRetryCustomerInvite, useSetDealUnderReview } from '../../hooks/useDeals';
 import { useAllAmendments, useReviewAmendment } from '../../hooks/useAmendments';
 import { useAppContext } from '../../context/AppContext';
 import { LoadingSpinner } from '../../components/shared/FormField';
@@ -95,6 +95,7 @@ function DealCard({ deal }) {
   const [customerEmail, setCustomerEmail] = useState(deal.customer_email || '');
   const approve = useApproveDeal();
   const reject = useRejectDeal();
+  const retryInvite = useRetryCustomerInvite();
   const setUnderReview = useSetDealUnderReview();
   const { showToast } = useAppContext();
 
@@ -104,14 +105,24 @@ function DealCard({ deal }) {
 
   const handleApprove = async () => {
     try {
-      await approve.mutateAsync({ dealId: deal.id, adminNotes: notes, startDate, customerEmail });
-      showToast(
-        customerEmail
-          ? 'Deal approved — contract created & customer invited'
-          : 'Deal approved — contract created',
-        'success'
-      );
-    } catch (err) { showToast(err.message, 'error'); }
+      const result = await approve.mutateAsync({ dealId: deal.id, adminNotes: notes, startDate, customerEmail });
+      if (result?.customerEmail && !result?.customerInviteSent) {
+        showToast(
+          `Deal approved, but invite email failed: ${result.customerInviteError || 'Unknown invite error'}`,
+          'warning'
+        );
+      } else {
+        showToast(
+          result?.customerEmail
+            ? 'Deal approved — contract created & customer invited'
+            : 'Deal approved — contract created',
+          'success'
+        );
+      }
+    } catch (err) {
+      console.error('Approve deal failed:', err);
+      showToast(err.message, 'error');
+    }
   };
 
   const handleReject = async () => {
@@ -129,7 +140,21 @@ function DealCard({ deal }) {
     } catch (err) { showToast(err.message, 'error'); }
   };
 
-  const isPending = approve.isPending || reject.isPending || setUnderReview.isPending;
+  const handleRetryInvite = async () => {
+    if (!customerEmail?.trim()) {
+      showToast('Please enter a customer email before sending invite', 'warning');
+      return;
+    }
+    try {
+      await retryInvite.mutateAsync({ dealId: deal.id, customerEmail: customerEmail.trim() });
+      showToast(`Customer invite sent to ${customerEmail.trim()}`, 'success');
+    } catch (err) {
+      console.error('Retry customer invite failed:', err);
+      showToast(err.message, 'error');
+    }
+  };
+
+  const isPending = approve.isPending || reject.isPending || retryInvite.isPending || setUnderReview.isPending;
 
   return (
     <div className="card" style={{ marginBottom: 12, padding: 0, overflow: 'hidden' }}>
@@ -298,6 +323,35 @@ function DealCard({ deal }) {
             <div style={{ borderTop: '1px solid var(--bdr)', paddingTop: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>Decision notes</div>
               <div style={{ fontSize: 12, color: 'var(--tx2)' }}>{deal.admin_notes}</div>
+            </div>
+          )}
+
+          {deal.status === 'approved' && (
+            <div style={{ borderTop: '1px solid var(--bdr)', paddingTop: 14, marginTop: 14 }}>
+              <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8 }}>Customer portal invite</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'end' }}>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--tx3)', display: 'block', marginBottom: 4 }}>
+                    Invite email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    style={{ fontSize: 12 }}
+                    placeholder={deal.customer_email || 'customer@example.com'}
+                    value={customerEmail}
+                    onChange={e => setCustomerEmail(e.target.value)}
+                  />
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleRetryInvite}
+                  disabled={isPending}
+                >
+                  {retryInvite.isPending ? <LoadingSpinner size={12} /> : <Send size={13} />}
+                  Invite customer again
+                </button>
+              </div>
             </div>
           )}
         </div>

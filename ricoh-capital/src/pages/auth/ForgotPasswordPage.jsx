@@ -28,13 +28,43 @@ export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState('request'); // 'request' | 'sent' | 'reset' | 'done'
   const [serverError, setServerError] = useState('');
+  const [isExchangingRecoveryCode, setIsExchangingRecoveryCode] = useState(false);
+
+  const withTimeout = async (promise, timeoutMs = 15000) => {
+    let timer;
+    const timeoutPromise = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Request timed out. Please try again.')), timeoutMs);
+    });
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
 
   useEffect(() => {
     // Detect ?type=recovery in query params (Supabase PKCE flow)
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('type') === 'recovery') {
+    const initializeRecovery = async () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('type') !== 'recovery') return;
+
       setMode('reset');
-    }
+      setIsExchangingRecoveryCode(true);
+      try {
+        const code = params.get('code');
+        if (code) {
+          // PKCE recovery links include a code that must be exchanged for a session.
+          const { error } = await withTimeout(supabase.auth.exchangeCodeForSession(code));
+          if (error) throw error;
+        }
+      } catch (err) {
+        setServerError(err.message || 'Recovery link is invalid or expired. Please request a new reset email.');
+      } finally {
+        setIsExchangingRecoveryCode(false);
+      }
+    };
+
+    initializeRecovery();
   }, []);
 
   useEffect(() => {
@@ -66,10 +96,15 @@ export default function ForgotPasswordPage() {
   const onResetSubmit = async ({ newPassword }) => {
     setServerError('');
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { data: { session } } = await withTimeout(supabase.auth.getSession());
+      if (!session) {
+        throw new Error('Recovery session not found. Please open the latest reset link from your email.');
+      }
+
+      const { error } = await withTimeout(supabase.auth.updateUser({
         password: newPassword,
         data: { needs_password_setup: false },
-      });
+      }));
       if (error) throw error;
       setMode('done');
       setTimeout(() => navigate('/login'), 2500);
@@ -201,9 +236,9 @@ export default function ForgotPasswordPage() {
                   type="submit"
                   className="btn btn-primary"
                   style={{ width: '100%', justifyContent: 'center', height: 40 }}
-                  disabled={resetForm.formState.isSubmitting}
+                  disabled={resetForm.formState.isSubmitting || isExchangingRecoveryCode}
                 >
-                  {resetForm.formState.isSubmitting ? <LoadingSpinner /> : 'Update password →'}
+                  {(resetForm.formState.isSubmitting || isExchangingRecoveryCode) ? <LoadingSpinner /> : 'Update password →'}
                 </button>
               </form>
             </>
